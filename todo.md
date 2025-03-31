@@ -16,7 +16,7 @@
 ## Tuesday April 1st
 - [ ] Implement Media page.
 - [ ] Implement Charts page.
-- [ ] Implement `Seek Professional Help Page`.
+- [ ] Implement `Seek Professional Help` Page.
 
-## Wednesday April 2nd.
+## Wednesday April 2nd
 - [ ] Implement First Database.
