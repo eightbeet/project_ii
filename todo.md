@@ -1,6 +1,6 @@
 # Todos
 
-##Friday March 28th
+## Friday March 28th
 [x]Implement Home page.
 [x]Fix bottom NavigationBar.
 
