@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'theme.dart';
-import 'home.dart';
-import 'timer.dart';
+import 'ui/theme.dart';
+import 'ui/home.dart';
+import 'ui/timer.dart';
 
 
 void main() => runApp(const App());

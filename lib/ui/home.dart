@@ -7,6 +7,8 @@ import 'block.dart';
 import 'goals.dart';
 import 'achievements.dart';
 import 'settings.dart';
+import 'media.dart';
+import 'stats.dart';
 
 class AppMainWidget extends StatefulWidget {
   const AppMainWidget({super.key});
@@ -38,7 +40,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         body: Center(
           child: Container(
             alignment: Alignment.center,
-            child: SettingsWidget(), 
+            child: StatsWidget(), 
           ),
         ),
         bottomNavigationBar: NavigationBar(

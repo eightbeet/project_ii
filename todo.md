@@ -14,7 +14,7 @@
 - [x] Implement settings page.
 
 ## Tuesday April 1st
-- [ ] Implement Media page.
+- [x] Implement Media page.
 - [ ] Implement Charts page.
 - [ ] Implement `Seek Professional Help` Page.
 

@@ -25,7 +25,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 'Settings',
                 style: TextStyle(
                   fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w400,
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),

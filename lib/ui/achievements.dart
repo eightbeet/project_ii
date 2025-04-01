@@ -40,7 +40,7 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
           children: [
             //Title and Profile 
             Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(20),
               color: Theme.of(context).colorScheme.surfaceContainerHigh,
               child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -48,7 +48,6 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
                 Text(
                   'Achievements',
                   style: TextStyle(
-                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
                   ),
