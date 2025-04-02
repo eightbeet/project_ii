@@ -68,10 +68,12 @@ class _AppMainWidgetState extends State<AppMainWidget> {
           ),
           NavigationDestination(
             icon: Icon(Icons.block),
+            selectedIcon: Icon(Icons.block_outlined),
             label: 'Block',
           ),
           NavigationDestination(
-            icon: Icon(Icons.av_timer),
+            selectedIcon: Icon(Icons.timer),
+            icon: Icon(Icons.timer_outlined),
             label: 'Timer',
           ),
           NavigationDestination(
@@ -293,95 +295,6 @@ class UsageSection extends StatelessWidget {
           ),
         ),
       );
-
-        // return Center(
-        //   child: Container(
-        //     padding: EdgeInsets.all(20),
-        //     margin: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        //     alignment: Alignment.center,
-        //     decoration: BoxDecoration(
-
-        //       color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        //       borderRadius: BorderRadius.circular(12),
-        //     ),
-        //     child: Column(
-               
-        //     children: [  
-        //        Align(
-        //           alignment: Alignment.topLeft, 
-        //           child: Padding(
-        //             padding: const EdgeInsets.only(bottom: 16.0),
-        //             child: Text(
-        //               'Usage',
-        //               style: TextStyle(
-        //                 fontSize: 20,
-        //                 fontWeight: FontWeight.bold,
-        //                 color: Colors.black,
-        //               ),
-        //             ),
-        //           ),
-        //         ),
-        //     Wrap(
-        //       spacing: 16.0, 
-        //       runSpacing: 16.0,
-        //       alignment: WrapAlignment.center,
-        //       children: timeData.map((data) {
-        //         return Card(
-        //           shape: RoundedRectangleBorder(
-        //             borderRadius: BorderRadius.circular(10),
-        //           ),
-        //           elevation: 4,
-        //           child: Padding(
-        //             padding: const EdgeInsets.all(16.0),
-        //             child: Column(
-        //               mainAxisSize: MainAxisSize.min,
-        //               children: [
-        //                 Text(
-        //                   '${data['tag']} Usage',
-        //                   style: TextStyle(
-        //                     fontSize: 16, 
-        //                     fontWeight: FontWeight.normal,
-        //                     color: Colors.black, 
-        //                   ),
-        //                 ),
-
-        //                 Text(
-        //                   '${data['hours']} Hrs',
-        //                   style: TextStyle(
-        //                     fontSize: 36,
-        //                     fontWeight: FontWeight.w100,
-        //                     color: Colors.black,
-        //                   ),
-        //                 ),
-
-        //                 Opacity(
-        //                    opacity: 0.5,
-        //                    child: Text(
-        //                      '${data['minutes']} Min',
-        //                      style: TextStyle(
-        //                        fontSize: 24, 
-        //                        fontWeight: FontWeight.w300,
-        //                        color: Colors.black,
-        //                      ),
-        //                    ),
-        //                  ),
-
-        //                 Text(
-        //                   '${data['seconds']} Secs',
-        //                   style: TextStyle(
-        //                     fontSize: 16,
-        //                     fontWeight: FontWeight.normal,
-        //                     color: Colors.black,
-        //                   ),
-        //                 ),
-        //               ],
-        //             ),
-        //           ),
-        //         );
-        //       }).toList(),
-        //     ),],),
-        //   ),
-        // );
       },
     );
   }
