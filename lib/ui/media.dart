@@ -9,31 +9,42 @@ class MediaWidget extends StatelessWidget {
     List<Media> musicData = mediaData.where((item) => item.mediaType == "music").toList();
     List<Media> imageData = mediaData.where((item) => item.mediaType == "image").toList();
 
-    return SingleChildScrollView(
-          child: Column(children: [
-            buildTitleContainer(context),
-
-            buildSectionTitle('Music'),
-            buildMediaSection(musicData, context),
-
-            buildSectionTitle('Images'),
-            buildMediaSection(imageData, context),
+    // return SingleChildScrollView(
+    return Container(
+            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(children: [
+               buildTitleContainer(context),
+               
+               buildSectionTitle('Music'),
+               buildMediaSection(musicData, context),
+               
+               buildSectionTitle('Images'),
+               buildMediaSection(imageData, context),
 
           ],),
       );
   }
 
   Widget buildTitleContainer(BuildContext context) {
+
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+      padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
       alignment: Alignment.centerLeft,
-      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Text(
         'Media',
         style: TextStyle(
           color: Theme.of(context).colorScheme.primary,
-          fontSize: 24,
-          fontWeight: FontWeight.w400,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -42,7 +53,7 @@ class MediaWidget extends StatelessWidget {
   Widget buildSectionTitle(String title) {
     return Container(
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8.0),
       child: Text(
         title,
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -213,7 +224,7 @@ List<Media> fetchMediaData() {
       description: "A great song to listen to!",
       imageUrl: "",
       mediaType: "music",
-      isUnlocked: true,
+      isUnlocked: false,
     ),
 
     Media(
@@ -243,8 +254,18 @@ List<Media> fetchMediaData() {
       description: "A beautiful image captured during the golden hour.",
       imageUrl: "",
       mediaType: "image",
-      isUnlocked: true,
+      isUnlocked: false,
     ),
+
+    Media(
+      name: "Image 1",
+      author: "Photographer 1",
+      authorAvatarUrl: "URL",
+      description: "A beautiful image captured during the golden hour.",
+      imageUrl: "",
+      mediaType: "image",
+      isUnlocked: true,
+    )
   ];
 }
 

@@ -48,7 +48,8 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
                 Text(
                   'Achievements',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w400,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),

@@ -38,6 +38,7 @@ dependencies:
   fl_chart: ^0.70.2
   flutter_local_notifications: ^19.0.0
   device_apps: ^2.2.0
+  material_design_icons_flutter: ^7.0.7296
 
 dev_dependencies:
   flutter_test:

@@ -23,10 +23,11 @@ class _BlockWidgetState extends State<BlockWidget> {
     );
     List<Application> mediaApps = [];
     for (var app in apps) {
-         if (app.category == ApplicationCategory.audio   ||
+         if (
+               // app.category == ApplicationCategory.audio   ||
                app.category == ApplicationCategory.video ||
                app.category == ApplicationCategory.image ||
-               app.category == ApplicationCategory.game  ||
+               // app.category == ApplicationCategory.game  ||
                app.category == ApplicationCategory.news  ||
                app.category == ApplicationCategory.social
              ) {
@@ -115,7 +116,7 @@ class _BlockWidgetState extends State<BlockWidget> {
                       onPressed: _startBlocking,
                       child: Icon(Icons.lock, size: 24),
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
                         shape: RoundedRectangleBorder(
                            borderRadius: BorderRadius.circular(30),
                       ),

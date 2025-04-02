@@ -30,7 +30,22 @@ class _TimerWidgetState extends State<TimerWidget> {
   Widget build(BuildContext context) {
 
     return Center(
-      child: Container(
+            child: Column(
+            children: [
+            Container(
+                  padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+                  alignment: Alignment.centerLeft,
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  child: Text(
+                    'Timer',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+         Container(
          padding: EdgeInsets.all(20),
          margin: EdgeInsets.all(24),
          alignment: Alignment.center,
@@ -41,6 +56,7 @@ class _TimerWidgetState extends State<TimerWidget> {
          child: Column(
          mainAxisAlignment: MainAxisAlignment.center,
          children: [
+
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -82,26 +98,27 @@ class _TimerWidgetState extends State<TimerWidget> {
           ],
         ),
 
-        SizedBox(height: 60),
+        SizedBox(height: 20),
         Text(
           '${_formatTime(hour)} : ${_formatTime(minute)} : ${_formatTime(second)}',
-          style: TextStyle(fontSize: 48, color: Theme.of(context).colorScheme.secondaryContainer),
+          style: TextStyle(fontSize: 32, color: Theme.of(context).colorScheme.secondaryContainer),
         ),
-
-        SizedBox(height: 40),
+        SizedBox(height: 20),
         ElevatedButton(
           onPressed: _startTimer, 
-          child: Text('Start', style: TextStyle(fontSize: 32)),
+          child: Text('Start'),
           style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.only(left: 60, right: 60),
-                    shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-          ),
+                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      textStyle: TextStyle(fontSize: 18),
+                    ),
         ),
        ],
       ),
      ),
+     ]),
     );
    }
 

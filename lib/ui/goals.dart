@@ -66,6 +66,17 @@ class _GoalsWidgetState extends State<GoalsWidget> {
           ),
           actions: [
             TextButton(
+              style: TextButton.styleFrom(
+                           shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                        ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
              style: TextButton.styleFrom(
                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30), 
@@ -82,18 +93,7 @@ class _GoalsWidgetState extends State<GoalsWidget> {
                 Navigator.of(context).pop();
               },
               child: Text("Add"),
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                        ),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text("Cancel"),
-            ),
+            ), 
           ],
         );
       },
