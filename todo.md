@@ -15,8 +15,15 @@
 
 ## Tuesday April 1st
 - [x] Implement Media page.
-- [ ] Implement Charts page.
-- [ ] Implement `Seek Professional Help` Page.
 
 ## Wednesday April 2nd
+- [x] Some Fixes.
+
+## Thursday 
+- [x] Implement Charts page.
+
+## Friday
+
+## April 2nd
+- [ ] Implement `Seek Professional Help` Page.
 - [ ] Implement First Database.
