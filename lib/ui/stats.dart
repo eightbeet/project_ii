@@ -251,6 +251,7 @@ class _StatsWidgetState extends State<StatsWidget> {
              ),
          child: LineChart(
           LineChartData(
+            lineTouchData: lineTouchData,
             titlesData: FlTitlesData(
                show: true,
                rightTitles: const AxisTitles(
@@ -314,6 +315,16 @@ class _StatsWidgetState extends State<StatsWidget> {
      );
  }
 
+  LineTouchData get lineTouchData => LineTouchData(
+        handleBuiltInTouches: true,
+        touchTooltipData: LineTouchTooltipData(
+          getTooltipColor: (touchedSpot) =>
+              Colors.transparent,
+          // tooltipPadding: EdgeInsets.zero,
+          // tooltipMargin: 8,
+        ),
+      );
+
    FlGridData get barGridData => FlGridData(
        show: true,
        checkToShowHorizontalLine: (value) => value % 10 == 0,
@@ -327,8 +338,8 @@ class _StatsWidgetState extends State<StatsWidget> {
    FlGridData get lineGridData => FlGridData(
      show: true,
      drawVerticalLine: true,
-     horizontalInterval: 5,
-     verticalInterval: 3,
+     horizontalInterval: 10,
+     verticalInterval: 2,
      getDrawingHorizontalLine: (value) {
        return const FlLine(
          strokeWidth: 1,

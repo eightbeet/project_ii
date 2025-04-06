@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'ui/theme.dart';
+// import 'ui/theme.dart';
+import 'ui/material-theme.dart';
 import 'ui/home.dart';
-import 'ui/timer.dart';
-
+import 'ui/chat.dart';
 
 void main() => runApp(const App());
 
@@ -15,9 +15,9 @@ class App extends StatelessWidget {
     const String appTitle = 'Project II';
     return MaterialApp(
       title: appTitle,
-      theme: AppTheme.light,
+      theme: ThemeData(colorScheme: lightColorScheme),
       home: AppMainWidget(),
-      // darkTheme: AppTheme.dark,
+      // darkTheme:ThemeData(colorScheme: darkColorScheme)
     );
   }
 }

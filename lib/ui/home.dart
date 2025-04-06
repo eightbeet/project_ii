@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'utils.dart';
 import 'timer.dart';
@@ -10,6 +11,11 @@ import 'achievements.dart';
 import 'settings.dart';
 import 'media.dart';
 import 'stats.dart';
+import 'chat.dart';
+import 'theme.dart';
+import 'dummy.dart';
+
+late final SharedPreferences prefs;
 
 class AppMainWidget extends StatefulWidget {
   const AppMainWidget({super.key});
@@ -35,6 +41,21 @@ class _AppMainWidgetState extends State<AppMainWidget> {
          ),
       );
   }
+
+  void _resetApiKey() {
+    // setState(() => _geminiApiKey = null);
+    // widget.prefs.remove('gemini_api_key');
+  }
+   void _navigateToAiChat() async { 
+      final prefs = await SharedPreferences.getInstance();
+      // final _geminiApiKey = "v7Uo5j1WsXr9ZkFqP2kL3mD8tVhA6g7Qb";
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => Chat(prefs: prefs),
+        ),
+      );
+   }
 
   @override
   Widget build(BuildContext context) {
@@ -93,9 +114,9 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: (){},
+        onPressed: _navigateToAiChat,
         tooltip: 'Increment',
-        child: ImageIcon(NetworkImage('http://192.168.103.22:8000/google-gemini-icon-removebg-preview.png')),
+        child: ImageIcon(AssetImage('icons/ai.png')),
       ), 
      );
    }
