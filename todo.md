@@ -19,11 +19,22 @@
 ## Wednesday April 2nd
 - [x] Some Fixes.
 
-## Thursday 
+## Thursday 3rd April
 - [x] Implement Charts page.
 
-## Friday
+## Friday 4th April
+- [x] Edited todo. 
 
-## April 2nd
-- [ ] Implement `Seek Professional Help` Page.
-- [ ] Implement First Database.
+## Saturday 5th April 
+- [x] ?????
+
+## Sunday April 6th April 
+- [x] Add LLM chat.
+
+## Monday 7th April
+- [ ] Implement Database(s).
+- [ ] Implement Media Storage(s).
+
+## Tuesday 8th April 
+- [ ] Implement reward system.
+- [ ] Implement phone app locking.
