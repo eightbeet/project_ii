@@ -29,7 +29,7 @@ class _AppState extends State<Chat> {
   @override
   void initState() {
     super.initState();
-     _geminiApiKey = "v7Uo5j1WsXr9ZkFqP2kL3mD8tVhA6g7Qb";
+     _geminiApiKey = "API_KEY_GOES_HERE";
     // _geminiApiKey = widget.prefs.getString('gemini_api_key');
   }
 
