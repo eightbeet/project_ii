@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+
+import '../data/usage.dart';
+
 class StatsBarData {
    final double x;
    final double y;
@@ -16,6 +19,7 @@ class PieData {
    PieData({required this.color, required this.name, required this.value});
 }
 
+
 List<StatsBarData> hoursPerDayInWeek = [
    StatsBarData(x: 0, y: 6),
    StatsBarData(x: 1, y: 4),
@@ -26,39 +30,6 @@ List<StatsBarData> hoursPerDayInWeek = [
    StatsBarData(x: 6, y: 5)
 ];
 
-List<StatsBarData> usageDuringHoursOfTheDayInMinutes = [
-   StatsBarData(x: 0, y: 20),
-   // StatsBarData(x: 1, y: 0),
-   // StatsBarData(x: 3, y: 0),
-   // StatsBarData(x: 2, y: 10),
-   StatsBarData(x: 4, y: 18),
-   // StatsBarData(x: 5, y: 0),
-   StatsBarData(x: 6, y: 34),
-   // StatsBarData(x: 7, y: 52),
-   // StatsBarData(x: 8, y: 54),
-   StatsBarData(x: 9, y: 44),
-   // StatsBarData(x: 10, y: 54),
-   // StatsBarData(x: 11, y: 48),
-   StatsBarData(x: 12, y: 30),
-   // StatsBarData(x: 13, y: 27),
-   // StatsBarData(x: 14, y: 35),
-   // StatsBarData(x: 15, y: 40),
-   StatsBarData(x: 16, y: 49),
-   // StatsBarData(x: 17, y: 59),
-   // StatsBarData(x: 18, y: 35),
-   StatsBarData(x: 19, y: 49),
-   // StatsBarData(x: 21, y: 31),
-   StatsBarData(x: 22, y: 20),
-   StatsBarData(x: 23, y: 40)
-];
-
-List<PieData> pieData = [
-   PieData(color: Color(0xFF202541), name : 'Youtube' , value: 40),
-   PieData(color: Color(0xFF004B3B), name : 'VLC', value: 30),
-   PieData(color: Color(0xFF9BA7CF), name : 'Games', value: 21),
-   PieData(color: Color(0xFF8FC3AD), name : 'Play', value: 7),
-   PieData(color: Color(0xFFA2A6B9), name : 'Telegram', value: 2),
-];
 
 class StatsWidget extends StatefulWidget {
   @override
@@ -68,19 +39,78 @@ class StatsWidget extends StatefulWidget {
 class _StatsWidgetState extends State<StatsWidget> {
 
   final double maxHours = 24;
-  List<Color> gradientColors = [
-     Color(0xFF202541),
-     Color(0xFF006B54),
-  ];
 
   int touchedIndex  = -1;
 
+  List<PieData> pieData = [];
+  List<Color> gradientColors = [];
+
+  Color flHorizontalColor = Colors.transparent;
+
+  double toMinutes(double seconds) {
+   return (seconds / 60.0);
+  }
+  
+  double toHours(double seconds) {
+   return (seconds / 3600.0);
+  }
+  
+
+  Future<List<FlSpot>> usageDataToFlSpots() async {
+     double x = 0;
+     List<FlSpot> list = [];
+     final usageData = await AppUsageDBHelper().getInDayUsage();
+
+     for(var data in usageData) {
+       double daily =  toMinutes(data['usage_time'].toDouble());
+       daily = daily > 59 ? 59 : daily; // [BUG]
+       list.add(FlSpot(x+=1, daily));
+     }
+     return list;
+  }
+
+  Future<List<BarChartGroupData>> usageDataToBarChatGroupData() async {
+     double x = 0;
+     List<BarChartGroupData> list = [];
+     final usageData = await AppUsageDBHelper().getInWeekUsage();
+
+     for(var data in usageData) {
+       final daily = toHours(data['usage_time'].toDouble());
+       final barData = BarChartGroupData(
+           x: x.truncate(),
+           barRods: [
+             BarChartRodData(
+               toY: daily,
+               gradient: _barsGradient,
+             )
+           ],
+         );
+       list.add(barData);
+     }
+     return list;
+  }
+
   @override
   Widget build(BuildContext context) {
-     return SingleChildScrollView( child: Column(
+
+  flHorizontalColor = Theme.of(context).colorScheme.outlineVariant;
+  
+   gradientColors = [
+         Theme.of(context).colorScheme.primary,
+         Theme.of(context).colorScheme.tertiary,
+     ];
+
+   pieData = [
+      PieData(color: Theme.of(context).colorScheme.primary, name : 'Youtube' , value: 40),
+      PieData(color: Theme.of(context).colorScheme.tertiary, name : 'VLC', value: 30),
+      PieData(color: Theme.of(context).colorScheme.primaryContainer, name : 'Games', value: 21),
+      PieData(color: Theme.of(context).colorScheme.outline, name : 'Play', value: 7),
+      PieData(color: Theme.of(context).colorScheme.primaryFixedDim, name : 'Telegram', value: 2),
+   ];
+
+    return SingleChildScrollView( child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        //Title and Profile 
         Container(
            padding: EdgeInsets.all(20), 
            color: Theme.of(context).colorScheme.surfaceContainerHigh,
@@ -107,6 +137,20 @@ class _StatsWidgetState extends State<StatsWidget> {
   }
  
    Widget f_hoursPerDayInWeek() {
+      return FutureBuilder<List<BarChartGroupData>>(
+         future: usageDataToBarChatGroupData(),
+         builder: (context, snapshot) {
+           if (snapshot.connectionState == ConnectionState.waiting) {
+             return Center(child: CircularProgressIndicator());
+           } else if (snapshot.hasError) {
+             return Center(child: Text('Error: ${snapshot.error}'));
+           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+             return Center(child: Text('No data available'));
+           }
+
+      final  usageDataToBarChatGroupData = snapshot.data!;
+
+
       return Container(
           height: 200,
           padding: EdgeInsets.all(20),
@@ -120,7 +164,7 @@ class _StatsWidgetState extends State<StatsWidget> {
               barTouchData: barTouchData,
               titlesData: titlesData,
               borderData: FlBorderData(show: false),
-              barGroups:  hoursPerDayInWeek.map((data)=> 
+              barGroups: hoursPerDayInWeek.map((data)=> // usageDataToBarChatGroupData
                  BarChartGroupData(
                      x: data.x.toInt(),
                      barRods: [
@@ -137,8 +181,9 @@ class _StatsWidgetState extends State<StatsWidget> {
               ),
            ),
       );
-   }
-
+     }
+   );
+}
    List<Widget> showingSectionsGuide() {
       return pieData.map((data) => 
           Container(
@@ -175,7 +220,7 @@ class _StatsWidgetState extends State<StatsWidget> {
               titleStyle: TextStyle(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFFF8F8F8),
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
                 shadows: shadows,
               ),
             ));
@@ -241,6 +286,20 @@ class _StatsWidgetState extends State<StatsWidget> {
    }
 
    Widget f_usageDuringHoursOfTheDayInMinutes() {
+
+   return FutureBuilder<List<FlSpot>>(
+      future: usageDataToFlSpots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No data available'));
+        }
+
+      final  usageDataToFlSpots = snapshot.data!;
+
       return Container(
          height: 200,
          padding: EdgeInsets.all(20),
@@ -288,9 +347,7 @@ class _StatsWidgetState extends State<StatsWidget> {
             gridData: lineGridData,
             lineBarsData: [
                LineChartBarData(
-                spots: 
-                    usageDuringHoursOfTheDayInMinutes.map((data) => 
-                                   FlSpot(data.x, data.y) ).toList(),
+                spots: usageDataToFlSpots,
                 isCurved: true,
                 gradient: LinearGradient(
                   colors: gradientColors,
@@ -312,8 +369,15 @@ class _StatsWidgetState extends State<StatsWidget> {
                    ]  
                 ),
              ),
-     );
+            );
+         },
+      );
  }
+
+
+  Color get gridAxisLineColor => Theme.of(context).colorScheme.outlineVariant;
+  Color get barToolTipTextColor => Theme.of(context).colorScheme.primaryFixedDim;
+
 
   LineTouchData get lineTouchData => LineTouchData(
         handleBuiltInTouches: true,
@@ -329,27 +393,27 @@ class _StatsWidgetState extends State<StatsWidget> {
        show: true,
        checkToShowHorizontalLine: (value) => value % 10 == 0,
        getDrawingHorizontalLine: (value) => FlLine(
-         color: Theme.of(context).colorScheme.outlineVariant,
+         color: gridAxisLineColor,
          strokeWidth: 0.5,
        ),
        drawVerticalLine: false,
      );
-     
+
    FlGridData get lineGridData => FlGridData(
      show: true,
      drawVerticalLine: true,
      horizontalInterval: 10,
      verticalInterval: 2,
-     getDrawingHorizontalLine: (value) {
-       return const FlLine(
+     getDrawingHorizontalLine: ( value) {
+       return FlLine(
          strokeWidth: 1,
-         color: Color(0xFFD1D1D1),
+         color: gridAxisLineColor,
        );
      },
      getDrawingVerticalLine: (value) {
-       return const FlLine(
+       return FlLine(
          strokeWidth: 1,
-         color: Color(0xFFD1D1D1),
+         color: gridAxisLineColor,
        );
      },
    );
@@ -368,8 +432,8 @@ class _StatsWidgetState extends State<StatsWidget> {
           ) {
             return BarTooltipItem(
               rod.toY.round().toString(),
-              const TextStyle(
-                color: Color(0xFFA2A6B9),
+              TextStyle(
+                color: barToolTipTextColor,
                 fontWeight: FontWeight.bold,
               ),
             );
@@ -441,7 +505,7 @@ class _StatsWidgetState extends State<StatsWidget> {
    Widget getTitles(double value, TitleMeta meta) {
 
     final style = TextStyle(
-       color: Theme.of(context).colorScheme.onPrimaryFixed,
+       color: Theme.of(context).colorScheme.primary,
        fontWeight: FontWeight.bold,
        fontSize: 14,
     );
@@ -482,9 +546,9 @@ class _StatsWidgetState extends State<StatsWidget> {
 
 
 Widget bottomTitleWidgets(double value, TitleMeta meta) {
-    const style = TextStyle(
-      color: Color(0xFF000000),
+    TextStyle style = TextStyle(
       fontWeight: FontWeight.bold,
+      color: Theme.of(context).colorScheme.primary,
       fontSize: 10,
     );
 
@@ -492,16 +556,16 @@ Widget bottomTitleWidgets(double value, TitleMeta meta) {
     Widget text;
     switch (value.toInt()) {
       case 1:
-        text = const Text('1 H', style: style);
+        text = Text('1 H', style: style);
         break;
       case 12:
-        text = const Text('12 H', style: style);
+        text = Text('12 H', style: style);
         break;
       case 23:
-        text = const Text('23 H', style: style);
+        text = Text('23 H', style: style);
         break;
       default:
-        text = const Text('', style: style);
+        text = Text('', style: style);
         break;
     }
 
@@ -512,8 +576,8 @@ Widget bottomTitleWidgets(double value, TitleMeta meta) {
   }
 
   Widget leftTitleWidgets(double value, TitleMeta meta) {
-    const style = TextStyle(
-      color: Color(0xFF000000),
+    TextStyle style = TextStyle(
+      color: Theme.of(context).colorScheme.primary,
       fontWeight: FontWeight.bold,
       fontSize: 8,
     );

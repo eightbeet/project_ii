@@ -16,8 +16,8 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: appTitle,
       theme: ThemeData(colorScheme: lightColorScheme),
+      // theme: ThemeData(colorScheme: MaterialTheme.lightScheme()),
       home: AppMainWidget(),
-      // darkTheme:ThemeData(colorScheme: darkColorScheme)
     );
   }
 }

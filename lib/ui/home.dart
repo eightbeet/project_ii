@@ -12,8 +12,8 @@ import 'settings.dart';
 import 'media.dart';
 import 'stats.dart';
 import 'chat.dart';
-import 'theme.dart';
 import 'dummy.dart';
+import '../data/usage.dart';
 
 late final SharedPreferences prefs;
 
@@ -30,7 +30,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
   Widget HomePageWidgets() {
       return SingleChildScrollView(
-          child: Column(
+         child: Column(
             children: <Widget>[
                //  AppShillSection(),
                TimerSection(),
@@ -42,25 +42,22 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       );
   }
 
-  void _resetApiKey() {
-    // setState(() => _geminiApiKey = null);
-    // widget.prefs.remove('gemini_api_key');
-  }
-   void _navigateToAiChat() async { 
+  void _navigateToAiChat() async { 
       final prefs = await SharedPreferences.getInstance();
-      // final _geminiApiKey = "v7Uo5j1WsXr9ZkFqP2kL3mD8tVhA6g7Qb";
-
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (BuildContext context) => Chat(prefs: prefs),
         ),
       );
-   }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("Project II")),
+        appBar: AppBar(
+            title: const Text("Project II"),
+            backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+        ),
         body: Center(
           child: Container(
             alignment: Alignment.center,
@@ -135,6 +132,15 @@ class TimerSection extends StatelessWidget {
       decoration: BoxDecoration(
          color: Theme.of(context).colorScheme.surfaceContainerHigh,
          borderRadius: BorderRadius.circular(12),
+         gradient: LinearGradient(
+            colors:[
+               Theme.of(context).colorScheme.tertiary,
+               Theme.of(context).colorScheme.tertiaryFixed,
+               Theme.of(context).colorScheme.onSurface
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+        ),
       ),
       child: Column(
         children: [
@@ -143,7 +149,7 @@ class TimerSection extends StatelessWidget {
             children: [
                 Container( 
                   padding: EdgeInsets.all(10), 
-                  child: Text("Start Timer", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                  child: Text("Instant Timer", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                 ),
                 const Icon(Icons.timer_rounded),
             ],
@@ -156,6 +162,7 @@ class TimerSection extends StatelessWidget {
                   ),
                 ),
                onPressed: () {
+                  TimerWidget.startInstantTimer(context, 0, 2, 5);
                   // [TODO]:Add Action
               },
               child: Text('Start', style: TextStyle(fontSize: 20)),
@@ -197,19 +204,31 @@ class TimerSection extends StatelessWidget {
 class UsageSection extends StatelessWidget {
    // [DUMMYDATA]
    // [DUMMYWAIT]
-  Future<List<Map<String, dynamic>>> fetchTimeData() async {
-    await Future.delayed(Duration(seconds: 2)); 
+
+  Map<String, dynamic> timeFormat(String tag, int seconds) {
+     int second = seconds % 60;
+     int minute = (seconds ~/ 60) % 60;
+     int hour = (seconds ~/ 3600);
+     return {'tag' : tag, 'hours': hour, 'minutes': minute, 'seconds': second};
+  }
+
+  Future<List<Map<String, dynamic>>> timeData() async {
+
+    final daily = await AppUsageDBHelper().calculateTimeUsageDay();
+    final weekly = await AppUsageDBHelper().calculateTimeUsageWeek();
+    final monthly = await AppUsageDBHelper().calculateTimeUsageMonth();
+
     return [
-      {'tag' :  'Monthly', 'hours': 12, 'minutes': 30, 'seconds': 45},
-      {'tag' :  'Weekly', 'hours': 2, 'minutes': 15, 'seconds': 30},
-      {'tag' :  'Daily', 'hours': 8, 'minutes': 5, 'seconds': 59},
+      timeFormat('Monthly', daily.toInt()),
+      timeFormat('Weekly', weekly.toInt()),
+      timeFormat('Daily', monthly.toInt()),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: fetchTimeData(), 
+      future: timeData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -254,13 +273,8 @@ class UsageSection extends StatelessWidget {
                    width: 150, 
                    height: 200,
                    decoration: BoxDecoration(
+                     color: Theme.of(context).colorScheme.primaryContainer,
                      borderRadius: BorderRadius.circular(12),
-                     color: Colors.white, 
-                     // gradient: LinearGradient(
-                     //   colors: gradient,
-                     //   begin: Alignment.topLeft,
-                     //   end: Alignment.bottomRight,
-                     // ),
                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),

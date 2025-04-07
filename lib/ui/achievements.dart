@@ -152,7 +152,10 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
                   return ListTile(
                       title: Text(
                         achievement['title']!,
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                        color: Theme.of(context).colorScheme.tertiary,
+                        fontWeight: FontWeight.bold
+                        ),
                       ),
                       subtitle: Text(achievement['description']!),
                       leading: CircleAvatar(

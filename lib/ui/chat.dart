@@ -6,13 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // import 'api_key_page.dart';
 
-
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   final prefs = await SharedPreferences.getInstance();
-//   runApp(Chat(prefs: prefs));
-// }
-
 class Chat extends StatefulWidget {
   static const title = 'AI Chat';
 
@@ -120,7 +113,7 @@ class _ChatPageState extends State<ChatPage>
         Scaffold(
           appBar: AppBar(
             title: const Text(Chat.title),
-            backgroundColor: Color(0xFFEDEDED),
+            backgroundColor: Theme.of(context).colorScheme.surfaceDim,
             actions: [
               IconButton(
                 onPressed: widget.onResetApiKey,
@@ -135,7 +128,7 @@ class _ChatPageState extends State<ChatPage>
               Container(
                decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(40)),
-                  color: Color(0xFFA2A6B9),
+                  color: Theme.of(context).colorScheme.primaryFixedDim,
                ),
                child: IconButton(
                 onPressed: _exitChat,
@@ -180,46 +173,49 @@ class _ChatPageState extends State<ChatPage>
       final aiChatActionButtonStyle = ActionButtonStyle(
          iconColor: Color(0xFFD1D1D1),
          iconDecoration: BoxDecoration(
-           color: Color(0xFF202541),
+           color: Theme.of(context).colorScheme.primary,
            borderRadius: BorderRadius.circular(20),
          ),
       );
 
       final aiChatMenuButtonStyle = ActionButtonStyle(
          iconDecoration: BoxDecoration(
-            color: Color(0xFF202541),
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(8),
       ),
     );
 
     return LlmChatViewStyle(
       backgroundColor: Colors.transparent,
-      progressIndicatorColor: Color(0xFF202541),
+      progressIndicatorColor: Theme.of(context).colorScheme.primary,
+
       suggestionStyle: SuggestionStyle(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),
-            bottomLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            bottomLeft: Radius.zero,
+            topRight: Radius.zero,
             bottomRight: Radius.circular(20),
           ),
-          color: Color(0xFFBFE2DA),
+          color: Theme.of(context).colorScheme.secondaryFixed,
         ),
       ),
-      chatInputStyle: ChatInputStyle(
-        backgroundColor: Color(0xFFEDEDED), 
+
+     chatInputStyle: ChatInputStyle(
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh, 
         decoration: BoxDecoration(
-          color: Color(0xFFEDEDED),
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
           border: Border.all(color: Color(0xFF919191)),
           borderRadius: BorderRadius.circular(20),
         ),
-        textStyle: TextStyle(color: Color(0x99000000)),
-        hintStyle: TextStyle(color: Color(0xFFD1D1D1)),
+        textStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        hintStyle: TextStyle(color: Theme.of(context).colorScheme.outlineVariant),
         hintText: 'Talk to me...',
       ),
+
       userMessageStyle: UserMessageStyle(
         decoration: BoxDecoration(
-          color: Color(0xFF9BA7CF), 
+          color: Theme.of(context).colorScheme.primaryContainer, 
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),
             bottomLeft: Radius.circular(20),
@@ -235,20 +231,22 @@ class _ChatPageState extends State<ChatPage>
           ],
         ),
       ),
+
       llmMessageStyle: LlmMessageStyle(
-        iconColor: Color(0xFF006B54),
+        iconColor: Theme.of(context).colorScheme.secondary,
         iconDecoration: BoxDecoration(
-          color: Color(0xFFF3F3F3),
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(8),
             bottomLeft: Radius.circular(8),
             topRight: Radius.zero,
             bottomRight: Radius.circular(8),
           ),
-          border: Border.all(color: Color(0xFF006B54)),
+          border: Border.all(color: Theme.of(context).colorScheme.secondary),
         ),
+
         decoration: BoxDecoration(
-          color: Color(0xFFF3F3F3),
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: BorderRadius.only(
             topLeft: Radius.zero,
             bottomLeft: Radius.circular(20),
@@ -267,7 +265,7 @@ class _ChatPageState extends State<ChatPage>
       closeMenuButtonStyle: aiChatActionButtonStyle,
       copyButtonStyle: aiChatMenuButtonStyle,
       actionButtonBarDecoration: BoxDecoration(
-        color: Color(0xFFA2A6B9),
+        color: Theme.of(context).colorScheme.primaryFixedDim,
         borderRadius: BorderRadius.circular(8),
       ),
     );

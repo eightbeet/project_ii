@@ -13,13 +13,6 @@ class _GoalsWidgetState extends State<GoalsWidget> {
     'Monthly': {'timeGoal': 40, 'isActive': false},
   };
 
-  // [DUMMYDATA:]
-  Map<String, List<Color>> goalGradients = {
-    'Daily':  [Color(0xFF919191), Color(0xFF9BA7CF), Color(0xFF004B3B)],
-    'Weekly': [Color(0xFF004B3B), Color(0xFFCCCED9), Color(0xFF000000)],
-    'Monthly':[Color(0xFFB00020), Color(0xFFFCD9DF), Color(0xFFA4A7BC)],
-  };
-
   void _toggleGoal(String goalType) {
     setState(() {
       goals[goalType]?['isActive'] = !(goals[goalType]?['isActive'] ?? false);
@@ -151,6 +144,12 @@ class _GoalsWidgetState extends State<GoalsWidget> {
 
   @override
   Widget build(BuildContext context) {
+
+  Map<String, List<Color>> goalGradients = {
+    'Daily':  [Theme.of(context).colorScheme.outline, Theme.of(context).colorScheme.primaryContainer, Theme.of(context).colorScheme.tertiary],
+    'Weekly': [Theme.of(context).colorScheme.tertiary, Theme.of(context).colorScheme.tertiaryFixed, Theme.of(context).colorScheme.onSurface],
+    'Monthly':[Theme.of(context).colorScheme.error, Theme.of(context).colorScheme.errorContainer, Theme.of(context).colorScheme.primaryFixedDim],
+  };
     return Column(
       children: [
         Container(

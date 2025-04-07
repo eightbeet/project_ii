@@ -2,9 +2,20 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:async';
 
+import '../data/usage.dart';
+
 class TimerWidget extends StatefulWidget {
   @override
   _TimerWidgetState createState() => _TimerWidgetState();
+
+static void startInstantTimer(BuildContext context, int hour, int minute, int second) {
+ Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext context) => TimerStartedPage(hour: hour, minute: minute, second: second),
+      ),
+    );
+   }
 }
 
 class _TimerWidgetState extends State<TimerWidget> {
@@ -24,8 +35,9 @@ class _TimerWidgetState extends State<TimerWidget> {
       ),
     );
   }
-
-
+  
+  // TimerWigetState.withValues(this.hour, this.minute, this.second);
+  
   @override
   Widget build(BuildContext context) {
 
@@ -211,11 +223,12 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
   late int minute;
   late int second;
   late int totalSeconds;
-  late Timer? _timer;
+  late int saveSeconds;
+   late Timer? _timer;
   bool isTimerRunning = false;
   bool isPaused = false; 
   
-  Color _circleColor = Color(0xFF202541);
+  Color _circleColor = Colors.transparent;
 
   @override
   void initState() {
@@ -224,6 +237,7 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
     minute = widget.minute;
     second = widget.second;
     totalSeconds = (hour * 3600) + (minute * 60) + second;
+    saveSeconds = totalSeconds; 
     _startCountdown();
   }
 
@@ -242,8 +256,10 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
             hour = (totalSeconds ~/ 3600);
             _updateCircleColor();
           } else {
-            _timer?.cancel();
-            Navigator.pop(context); 
+           print(saveSeconds); 
+           AppUsageDBModify().saveUsageData(saveSeconds);
+           _timer?.cancel();
+           Navigator.pop(context); 
           }
         });
     });
@@ -273,16 +289,19 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
   void _updateCircleColor() {
     double ratio = totalSeconds / ((widget.hour * 3600) + (widget.minute * 60) + widget.second);
     setState(() {
-      _circleColor = Color.lerp(Color(0xFF202541), Color(0xFFCF6679), 1 - ratio)!;
+      _circleColor = Color.lerp(Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.error, 1 - ratio)!;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // _circleColor = Theme.of(context).colorScheme.primary;
+    // _circleColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Timer Started'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.surfaceDim,
       ),
       body: Container(
          //padding: EdgeInsets.all(20),
@@ -343,7 +362,7 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
                     onPressed: _stopTimer,
                     child: Text('Stop'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.error,
+                      backgroundColor: Theme.of(context).colorScheme.errorContainer,
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
