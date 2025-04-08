@@ -19,18 +19,6 @@ class PieData {
    PieData({required this.color, required this.name, required this.value});
 }
 
-
-List<StatsBarData> hoursPerDayInWeek = [
-   StatsBarData(x: 0, y: 6),
-   StatsBarData(x: 1, y: 4),
-   StatsBarData(x: 2, y: 10),
-   StatsBarData(x: 3, y: 3),
-   StatsBarData(x: 4, y: 9),
-   StatsBarData(x: 5, y: 4),
-   StatsBarData(x: 6, y: 5)
-];
-
-
 class StatsWidget extends StatefulWidget {
   @override
   _StatsWidgetState createState() => _StatsWidgetState();
@@ -62,8 +50,8 @@ class _StatsWidgetState extends State<StatsWidget> {
      final usageData = await AppUsageDBHelper().getInDayUsage();
 
      for(var data in usageData) {
-       double daily =  toMinutes(data['usage_time'].toDouble());
-       daily = daily > 59 ? 59 : daily; // [BUG]
+       double daily = toMinutes(data['usage_time'].toDouble());
+       daily = daily > 59 ? 59 : daily.roundToDouble(); // [BUG]
        list.add(FlSpot(x+=1, daily));
      }
      return list;
@@ -72,19 +60,21 @@ class _StatsWidgetState extends State<StatsWidget> {
   Future<List<BarChartGroupData>> usageDataToBarChatGroupData() async {
      double x = 0;
      List<BarChartGroupData> list = [];
-     final usageData = await AppUsageDBHelper().getInWeekUsage();
+     List<dynamic> perDay = await AppUsageDBHelper().calculateTimeUsageDaysPro(6);
+     var reversedPerDay = perDay.reversed.toList();
+     reversedPerDay = reversedPerDay.map( (x) => x == 0 ? 0.1 : x ).toList();
 
-     for(var data in usageData) {
-       final daily = toHours(data['usage_time'].toDouble());
+     for(var data in reversedPerDay) {
+       final daily = toHours(data.toDouble());
        final barData = BarChartGroupData(
-           x: x.truncate(),
+           x: (x++).truncate(),
            barRods: [
              BarChartRodData(
                toY: daily,
                gradient: _barsGradient,
              )
            ],
-         );
+       );
        list.add(barData);
      }
      return list;
@@ -164,17 +154,7 @@ class _StatsWidgetState extends State<StatsWidget> {
               barTouchData: barTouchData,
               titlesData: titlesData,
               borderData: FlBorderData(show: false),
-              barGroups: hoursPerDayInWeek.map((data)=> // usageDataToBarChatGroupData
-                 BarChartGroupData(
-                     x: data.x.toInt(),
-                     barRods: [
-                       BarChartRodData(
-                         toY: data.y,
-                         gradient: _barsGradient,
-                       )
-                     ],
-                     showingTooltipIndicators: [0],
-                )).toList(),
+              barGroups: usageDataToBarChatGroupData,
               gridData: barGridData,
               alignment: BarChartAlignment.spaceAround,
               maxY: maxHours,
@@ -248,20 +228,7 @@ class _StatsWidgetState extends State<StatsWidget> {
                   aspectRatio: 1,
                   child: PieChart(
                     PieChartData(
-                      pieTouchData: PieTouchData(
-                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                          setState(() {
-                            if (!event.isInterestedForInteractions ||
-                                pieTouchResponse == null ||
-                                pieTouchResponse.touchedSection == null) {
-                              touchedIndex = -1;
-                              return;
-                            }
-                            touchedIndex = pieTouchResponse
-                                .touchedSection!.touchedSectionIndex;
-                          });
-                        },
-                      ),
+                      // pieTouchData: pieTouchData,
                       borderData: FlBorderData(
                         show: false,
                       ),
@@ -348,46 +315,77 @@ class _StatsWidgetState extends State<StatsWidget> {
             lineBarsData: [
                LineChartBarData(
                 spots: usageDataToFlSpots,
-                isCurved: true,
+                // isCurved: true,
+                // [BUG]: Curve goes to the wrong direciton with curve enabled.
                 gradient: LinearGradient(
                   colors: gradientColors,
                 ),
                 barWidth: 2,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(
-                      show: true,
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        colors: gradientColors
-                            .map((color) => color.withValues(alpha: 0.4))
-                            .toList(),
-                      ),
-                       ),
-                     ),
-                   ]  
+                isStrokeCapRound: true,
+                dotData: const FlDotData(
+                     show: false,
                 ),
-             ),
-            );
-         },
-      );
+                belowBarData: BarAreaData(
+                  show: true,
+                  gradient: LinearGradient(
+                    colors: gradientColors
+                        .map((color) => color.withValues(alpha: 0.4))
+                        .toList(),
+                  ),
+                ),
+              ),
+            ]  
+           ),
+         ),
+       );
+     },
+   );
  }
 
 
   Color get gridAxisLineColor => Theme.of(context).colorScheme.outlineVariant;
   Color get barToolTipTextColor => Theme.of(context).colorScheme.primaryFixedDim;
 
+  PieTouchData get pieTouchData => PieTouchData(
+        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+             setState(() {
+               if (!event.isInterestedForInteractions ||
+                   pieTouchResponse == null ||
+                   pieTouchResponse.touchedSection == null) {
+                 touchedIndex = -1;
+                 return;
+               }
+               touchedIndex = pieTouchResponse
+                   .touchedSection!.touchedSectionIndex;
+             });
+           },
+         );
 
   LineTouchData get lineTouchData => LineTouchData(
-        handleBuiltInTouches: true,
-        touchTooltipData: LineTouchTooltipData(
-          getTooltipColor: (touchedSpot) =>
-              Colors.transparent,
-          // tooltipPadding: EdgeInsets.zero,
-          // tooltipMargin: 8,
-        ),
-      );
+                  getTouchLineStart: (_, __) => -double.infinity,
+                  getTouchLineEnd: (_, __) => double.infinity,
+                  getTouchedSpotIndicator:
+                      (LineChartBarData barData, List<int> spotIndexes) {
+                    return spotIndexes.map((spotIndex) {
+                      final lineColor = Theme.of(context).colorScheme.tertiary;
+                      return TouchedSpotIndicatorData(
+                        FlLine(
+                          color: lineColor,
+                          strokeWidth: 1.5,
+                        ),
+                        FlDotData(
+                          show: true,
+                          getDotPainter: (spot, percent, barData, index) {
+                            return FlDotCirclePainter(
+                              radius: 5,
+                              color: Theme.of(context).colorScheme.primary,
+                              strokeWidth: 0,
+                            );
+                          },
+                        ),
+                      );
+                    }).toList();
+                  });
 
    FlGridData get barGridData => FlGridData(
        show: true,
@@ -450,20 +448,6 @@ class _StatsWidgetState extends State<StatsWidget> {
     end: Alignment.topCenter,
   );
 
-   List<BarChartGroupData> _barGroups() {
-      return hoursPerDayInWeek.map((data)=> 
-       BarChartGroupData(
-           x: data.x.round(),
-           barRods: [
-             BarChartRodData(
-               toY: data.y,
-               gradient: _barsGradient,
-             )
-           ],
-           showingTooltipIndicators: [0],
-      )).toList();
-   }
-
   FlTitlesData get titlesData => FlTitlesData(
     show: true,
     bottomTitles: AxisTitles(
@@ -503,45 +487,58 @@ class _StatsWidgetState extends State<StatsWidget> {
   }
 
    Widget getTitles(double value, TitleMeta meta) {
-
+    final date = DateTime.now();
+    final today = date.day; 
+   
+    String text;
+    switch (value.toInt()) {
+      case 0:
+        text = ('${(today - 6)}').padLeft(2, '0');
+        break;  
+      case 1:  
+        text = ('${(today - 5)}').padLeft(2, '0');
+        break;  
+      case 2:  
+        text = ('${(today - 4)}').padLeft(2, '0');
+        break;  
+      case 3:   
+        text = ('${(today - 3)}').padLeft(2, '0');
+        break;  
+      case 4:   
+        text = ('${(today - 2)}').padLeft(2, '0');
+        break;  
+      case 5:   
+        text = ('${(today - 1)}').padLeft(2, '0');
+        break;  
+      case 6:   
+        text = ('${(today)}').padLeft(2, '0');
+        break;
+      default:
+        text = '';
+        break;
+    }
+    final isToday = text == ('${(today)}').padLeft(2, '0');
     final style = TextStyle(
        color: Theme.of(context).colorScheme.primary,
        fontWeight: FontWeight.bold,
        fontSize: 14,
     );
 
-    String text;
-    switch (value.toInt()) {
-      case 0:
-        text = 'Mn';
-        break;
-      case 1:
-        text = 'Te';
-        break;
-      case 2:
-        text = 'Wd';
-        break;
-      case 3:
-        text = 'Tu';
-        break;
-      case 4:
-        text = 'Fr';
-        break;
-      case 5:
-        text = 'St';
-        break;
-      case 6:
-        text = 'Sn';
-        break;
-      default:
-        text = '';
-        break;
-    }
-    return SideTitleWidget(
+    return Container(
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: isToday ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.5)
+                     :Theme.of(context).colorScheme.surfaceContainerHigh
+               
+    ), 
+    alignment: Alignment.center,
+    padding: EdgeInsets.all(3),
+    child: SideTitleWidget(
       meta: meta,
-      space: 4,
+      space: 2,
       child: Text(text, style: style),
-    );
+    ),
+   );
   }
 
 
@@ -551,7 +548,6 @@ Widget bottomTitleWidgets(double value, TitleMeta meta) {
       color: Theme.of(context).colorScheme.primary,
       fontSize: 10,
     );
-
 
     Widget text;
     switch (value.toInt()) {

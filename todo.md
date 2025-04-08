@@ -35,7 +35,7 @@
 - [x] Implement Database(s).
 
 ## Tuesday 8th April 
-- [ ] Fix database bugs.
-- [ ] Implement Media Storage(s).
+- [x] Fix database bugs.
 - [ ] Implement reward system.
+- [ ] Implement Media Storage(s).
 - [ ] Implement phone app locking.

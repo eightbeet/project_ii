@@ -219,9 +219,9 @@ class UsageSection extends StatelessWidget {
     final monthly = await AppUsageDBHelper().calculateTimeUsageMonth();
 
     return [
-      timeFormat('Monthly', daily.toInt()),
+      timeFormat('Daily', daily.toInt()),
       timeFormat('Weekly', weekly.toInt()),
-      timeFormat('Daily', monthly.toInt()),
+      timeFormat('Monthly', monthly.toInt()),
     ];
   }
 

@@ -247,7 +247,7 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
 
     isTimerRunning = true;
 
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(Duration(milliseconds: 1), (timer) {
         setState(() {
           if (totalSeconds > 0) {
             totalSeconds--;
