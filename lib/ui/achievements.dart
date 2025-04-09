@@ -1,5 +1,8 @@
+import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../data/data_achievements.dart';
 
 class AchievementsWidget extends StatefulWidget {
   @override
@@ -7,39 +10,71 @@ class AchievementsWidget extends StatefulWidget {
 }
 
 class _AchievementsWidgetState extends State<AchievementsWidget> {
-  // Simulated user data 
-  int currentXP = 1200; 
-  int nextMilestone = 1500; 
-  List<Map<String, String>> achievements = [
-    {'title': 'Beginner', 'description': 'Completed your first task.'},
-    {'title': 'Intermediate', 'description': 'Completed 10 tasks.'},
-    {'title': 'Advanced', 'description': 'Completed 50 tasks.'},
-    {'title': 'Master', 'description': 'Completed 100 tasks.'},
-  ];
+  
+  int userLevel = 0;
+  int nextLevel = 0;
+  int currentXp = 0;
+  int remainingXp = 0;
+  int achievementsCount = 0;
+  double progress = 0;
+  List<Map<String, dynamic>> _achievements = [];
 
-  // User's level based on currentXP and nextMilestone
-  int get userLevel {
-    if (currentXP >= 1000) return 10; 
-    if (currentXP >= 500) return 8;   
-    if (currentXP >= 100) return 5;   
-    return 1;                         
+  Future<List<Map<String, dynamic>>> achievements() async {
+
+      return await AppAchievementsDBHelper().getAllAchievements();
   }
 
-  int get nextLevel {
-    return userLevel + 1;
+  Future<List<Map<String, dynamic>>> progressData() async { 
+
+      return await AppAchievementsDBHelper().getProgressData();
   }
 
   @override
   Widget build(BuildContext context) {
-    double progress = currentXP / nextMilestone;
-    int remainingXP = nextMilestone - currentXP;
 
-    int achievementsCount = achievements.length;
-    return Column(
+    return FutureBuilder<List<Map <String, dynamic>>> (
+      future: achievements(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No data available'));
+        }
+
+       _achievements = snapshot.data!;
+       achievementsCount = _achievements.length;
+
+      return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             //Title and Profile 
-            Container(
+            FutureBuilder<List<Map <String, dynamic>>> (
+            future: progressData(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(child: Text('No data available'));
+              }
+            
+            final data = snapshot.data!;
+            final userProgressData = data[0];
+            final nextLevelData = data[1];
+
+            userLevel = userProgressData['current_level'];
+            nextLevel = userProgressData['next_level'];
+
+            final nextLevelXp = nextLevelData['min_xp'];
+            currentXp = userProgressData['user_xp'];
+
+            remainingXp = nextLevelXp - currentXp;
+            progress = currentXp.toDouble() / nextLevelXp.toDouble();
+
+            return Container(
               padding: EdgeInsets.all(20),
               color: Theme.of(context).colorScheme.surfaceContainerHigh,
               child: Row(
@@ -88,7 +123,8 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
                 ),
               ],
             ),
-           ),
+           );})
+            ,
             SizedBox(height: 20),
             Padding(
             padding: EdgeInsets.all(16),
@@ -105,11 +141,12 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
             ),
 
             SizedBox(height: 10),
+
             RichText(
               text: TextSpan(
                 children: [
                   TextSpan(
-                    text: ' $remainingXP XP ',
+                    text: ' $remainingXp XP ',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -126,7 +163,7 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
                   ),
                 ],
               ),
-            ),            
+            ),
             ],
             ),
             ),
@@ -146,30 +183,55 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
             SizedBox(height: 8),
             Expanded(
               child: ListView.separated(
-                itemCount: achievements.length,
-                itemBuilder: (context, index) {
-                  var achievement = achievements[index];
-                  return ListTile(
-                      title: Text(
-                        achievement['title']!,
-                        style: TextStyle(
-                        color: Theme.of(context).colorScheme.tertiary,
-                        fontWeight: FontWeight.bold
+                  itemCount: _achievements.length,
+                  itemBuilder: (context, index) {
+                    var achievement = _achievements[index];
+                    return ListTile(
+                        title: Text(
+                          achievement['achievement_kind']!,
+                          style: TextStyle(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          fontWeight: FontWeight.bold
+                          ),
                         ),
-                      ),
-                      subtitle: Text(achievement['description']!),
-                      leading: CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                                    child: CircleAvatar(radius: 17, backgroundColor: Theme.of(context).colorScheme.primary),
-                                    ),
-                   );
-                  },
-                  separatorBuilder: (context, index) => const Divider(height: 3),
-                ),
-               ),
-       ],
-    );
+                        subtitle: Text(achievement['description']!),
+                        trailing: RichText(
+                                     text: TextSpan(
+                                       children: [
+                                         TextSpan(
+                                           text: "${achievement['min_xp'] - currentXp}xp ",
+                                           style: TextStyle(
+                                             fontSize: 12,
+                                             fontWeight: FontWeight.bold,
+                                             color: Theme.of(context).colorScheme.primaryContainer,
+                                           ),
+                                         ),
+                                         TextSpan(
+                                           text: 'left',
+                                           style: TextStyle(
+                                             fontSize: 10,
+                                             fontWeight: FontWeight.bold,
+                                             color: Theme.of(context).colorScheme.primary,
+                                           ),
+                                         ),
+                                       ],
+                                     ),
+                                   ),
+                        leading: CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                                      child: CircleAvatar(radius: 17, backgroundColor: Theme.of(context).colorScheme.primary),
+                                      ),
+                     );
+                    },
+                    separatorBuilder: (context, index) => const Divider(height: 3),
+                  
+                 ),
+             ),
+         ], 
+       );
+      }
+   );
   }
 }
 

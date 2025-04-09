@@ -126,6 +126,9 @@ class AppUsageDBModify {
       }
    }
 
-   void clearUsageData() => AppUsageDBHelper()._clearAllUsageData();
+   void clearUsageData() {
+
+      AppUsageDBHelper()._clearAllUsageData();
+   }
 }
 

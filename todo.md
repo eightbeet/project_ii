@@ -32,10 +32,15 @@
 - [x] Add LLM chat.
 
 ## Monday 7th April
-- [x] Implement Database(s).
+- [x] Implement database(s).
 
 ## Tuesday 8th April 
 - [x] Fix database bugs.
+
+## Wednesday 9th April
+	- [x] Integrated achievements with database. 
+
+## Thursday 10th April
 - [ ] Implement reward system.
 - [ ] Implement Media Storage(s).
 - [ ] Implement phone app locking.

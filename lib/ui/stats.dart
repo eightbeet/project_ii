@@ -138,7 +138,7 @@ class _StatsWidgetState extends State<StatsWidget> {
              return Center(child: Text('No data available'));
            }
 
-      final  usageDataToBarChatGroupData = snapshot.data!;
+          final  usageDataToBarChatGroupData = snapshot.data!;
 
 
       return Container(
