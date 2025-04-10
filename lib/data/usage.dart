@@ -132,3 +132,13 @@ class AppUsageDBModify {
    }
 }
 
+class UsageTime {
+   
+  double toMinutes(double seconds) {
+   return (seconds / 60.0);
+  }
+  
+  double toHours(double seconds) {
+   return (seconds / 3600.0);
+  }
+}

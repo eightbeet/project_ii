@@ -50,6 +50,10 @@ class AppAchievementsDBHelper {
       final at = list1[0]['next_level'];
       final list2 = await db.rawQuery('SELECT * FROM level_data WHERE id = ${at}');
 
+      final a = await db.query('progress_data') ;
+      final b = await db.query('level_data') ;
+      print("PROGRESS DATA ${a}");
+      print("LEVEL DATA ${b}");
       return [list1[0], list2[0]];
   }
 
@@ -61,8 +65,12 @@ class AppAchievementsDBHelper {
   }
 
   Future<List<Map<String, dynamic>>> getAllAchievements() async {
+    // More fire breathers.
     Database db = await AppDB().database;
-    return await db.query('achievements_data');
+    final x = await db.rawQuery("SELECT achievement_index FROM progress_data WHERE id =1");
+    final idx = x[0]['achievement_index'];
+    print('IDXX: ${idx}');
+    return await db.rawQuery('SELECT * FROM achievements_data WHERE id BETWEEN 0 AND ${idx}');
   }
  
   void initProgressData(int xp, int level) async {
@@ -73,12 +81,13 @@ class AppAchievementsDBHelper {
     printStatusInfo(err, 'progress_data');
   }  
   
-  void updateProgressData(int xp, int level) async {
+  void updateProgressData(int xp, int level, int achievementIndex) async {
       Database db = await AppDB().database;
       final int id = 1;
       final int nextLevel = level == LevelData.maxLevel ? level : LevelData.maxLevel;
-      final err = await db.update('progress_data', {'user_xp': xp, 'current_level': level, 'next_level': nextLevel}
-                                                   , where: 'id ? ', whereArgs: [id]);
+      final err = await db.update('progress_data', {'user_xp': xp, 'current_level': level,
+                                                    'next_level': nextLevel, 'achievement_index': achievementIndex}
+                                                   , where: 'id = ?', whereArgs: [id]);
       printStatusInfo(err, 'progress_data');
   }
 

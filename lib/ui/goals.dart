@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../data/goals.dart';
+
 class GoalsWidget extends StatefulWidget {
   @override
   _GoalsWidgetState createState() => _GoalsWidgetState();
@@ -7,27 +9,41 @@ class GoalsWidget extends StatefulWidget {
 
 class _GoalsWidgetState extends State<GoalsWidget> {
   // [DUMMYDATA:]
-  Map<String, Map<String, dynamic>> goals = {
-    'Daily': {'timeGoal': 2, 'isActive': true},
-    'Weekly': {'timeGoal': 10, 'isActive': true},
-    'Monthly': {'timeGoal': 40, 'isActive': false},
-  };
+  List<GoalData> goals = [
+    // 'Daily': {'timeGoal': 2, 'isActive': true},
+    // 'Weekly': {'timeGoal': 10, 'isActive': true},
+    // 'Monthly': {'timeGoal': 40, 'isActive': false},
+  ];
+  
 
-  void _toggleGoal(String goalType) {
+  Future<List<GoalData>> getGoalData() async {
+   List<GoalData> _goals = [];
+    final data = await AppGoalsHelper().getAllGoals();
+    for(var item in data) {
+       final goal = AppGoalsHelper().goalFormat(item);
+      _goals.add(goal);
+    }
+    return _goals;
+  }
+
+  void _toggleGoal(GoalData goal) {
     setState(() {
-      goals[goalType]?['isActive'] = !(goals[goalType]?['isActive'] ?? false);
+         goal.isActive = !goal.isActive;
+         AppGoalsHelper().updateGoal(goal);
     });
   }
 
-  void _deleteGoal(String goalType) {
+  void _deleteGoal(int? id ) {
     setState(() {
-      goals.remove(goalType);
+      // goals.remove(goal);
+      AppGoalsHelper().deleteGoal(id);
     });
    }
   void _addGoal() {
-    String newGoalName = '';
+    String newGoalKind = '';
     int newTimeGoal = 0;
     bool isActive = true;
+    bool isAchieved = false;
 
     showDialog(
       context: context,
@@ -77,11 +93,13 @@ class _GoalsWidgetState extends State<GoalsWidget> {
               ),
               onPressed: () {
                 setState(() {
-                  newGoalName = nameController.text;
+                  newGoalKind = nameController.text;
                   newTimeGoal = int.tryParse(timeController.text) ?? 0;
-                  if (newGoalName.isNotEmpty && newTimeGoal > 0) {
-                    goals[newGoalName] = {'timeGoal': newTimeGoal, 'isActive': isActive};
-                  }
+                  if (newGoalKind.isNotEmpty && newTimeGoal > 0) {
+                    final goal = GoalData(duration : newTimeGoal, isAchieved: isAchieved, isActive: isActive, kind: newGoalKind);
+                    AppGoalsHelper().insertGoal(goal);
+                    // goals.add(goal);
+                    };
                 });
                 Navigator.of(context).pop();
               },
@@ -93,12 +111,12 @@ class _GoalsWidgetState extends State<GoalsWidget> {
     );
   }
 
-  void _editGoalTime(String goalType) {
+  void _editGoalTime(GoalData goal) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         TextEditingController controller =
-            TextEditingController(text: goals[goalType]?['timeGoal'].toString());
+            TextEditingController(text: goal.duration.toString());
 
         return AlertDialog(
           title: Text("Edit Time Goal"),
@@ -119,7 +137,8 @@ class _GoalsWidgetState extends State<GoalsWidget> {
                ),
               onPressed: () {
                 setState(() {
-                  goals[goalType]?['timeGoal'] = int.tryParse(controller.text) ?? goals[goalType]?['timeGoal'];
+                  goal.duration = int.tryParse(controller.text) ?? goal.duration;
+                  AppGoalsHelper().updateGoal(goal);
                 });
                 Navigator.of(context).pop();
               },
@@ -150,9 +169,26 @@ class _GoalsWidgetState extends State<GoalsWidget> {
     'Weekly': [Theme.of(context).colorScheme.tertiary, Theme.of(context).colorScheme.tertiaryFixed, Theme.of(context).colorScheme.onSurface],
     'Monthly':[Theme.of(context).colorScheme.error, Theme.of(context).colorScheme.errorContainer, Theme.of(context).colorScheme.primaryFixedDim],
   };
-    return Column(
-      children: [
-        Container(
+
+   return FutureBuilder<List<GoalData>>(
+      future: getGoalData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+           print("[NO_DATA]: Snapshot is empty, data not avilable!");
+          // return Center(child: Text('No data available'));
+        }
+
+      goals = snapshot.data!;
+      print("GOALS :: ${goals}");
+
+      return Column(
+
+        children: [
+         Container(
           padding: EdgeInsets.all(16),
           color: Theme.of(context).colorScheme.surfaceContainerHigh,
           child: Row(
@@ -195,8 +231,8 @@ class _GoalsWidgetState extends State<GoalsWidget> {
           child: Wrap(
             spacing: 16.0,
             runSpacing: 16.0,
-            children: goals.keys.map((goalType) {
-              final gradient = goalGradients[goalType] ?? [Colors.grey, Colors.grey];
+            children: goals.map((goal) {
+              final gradient = goalGradients[goal.kind] ?? [Colors.grey, Colors.grey];
 
               return Container(
                 width: 150, 
@@ -218,7 +254,7 @@ class _GoalsWidgetState extends State<GoalsWidget> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            goalType,
+                            goal.kind,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -227,9 +263,9 @@ class _GoalsWidgetState extends State<GoalsWidget> {
                           PopupMenuButton<String>(
                             onSelected: (value) {
                               if (value == 'Delete') {
-                                _deleteGoal(goalType);
+                                _deleteGoal(goal.id);
                               } else if (value == 'Edit Time') {
-                                _editGoalTime(goalType);
+                                _editGoalTime(goal);
                               }
                             },
                             shape: RoundedRectangleBorder(
@@ -254,7 +290,7 @@ class _GoalsWidgetState extends State<GoalsWidget> {
                       SizedBox(height: 5),
 
                       Text(
-                        '${goals[goalType]?['timeGoal']} h',
+                        '${goal.duration} h',
                         style: TextStyle(fontSize: 40, fontWeight: FontWeight.w100),
                       ),
                       SizedBox(height: 5),
@@ -263,8 +299,8 @@ class _GoalsWidgetState extends State<GoalsWidget> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Switch(
-                            value: goals[goalType]?['isActive'] ?? false,
-                            onChanged: (_) => _toggleGoal(goalType),
+                            value: goal.isActive,
+                            onChanged: (_) => _toggleGoal(goal),
                           ),
                         ],
                       ),
@@ -277,5 +313,6 @@ class _GoalsWidgetState extends State<GoalsWidget> {
         ),
       ],
     );
+    });
   }
 }

@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+
 import '../data/data_achievements.dart';
+import '../service/svc_achievements.dart';
 
 class AchievementsWidget extends StatefulWidget {
   @override
@@ -32,15 +34,18 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
   @override
   Widget build(BuildContext context) {
 
+    
+   AppAchievementService().update();
+
     return FutureBuilder<List<Map <String, dynamic>>> (
       future: achievements(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(child: Text('Error; Top: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No data available'));
+          print ('No data available');
         }
 
        _achievements = snapshot.data!;
@@ -56,7 +61,7 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
+                return Center(child: Text('Error; Bottom: ${snapshot.error}'));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return Center(child: Text('No data available'));
               }
