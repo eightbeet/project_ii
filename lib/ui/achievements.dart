@@ -18,27 +18,26 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
   int currentXp = 0;
   int remainingXp = 0;
   int achievementsCount = 0;
+
   double progress = 0;
   List<Map<String, dynamic>> _achievements = [];
 
-  Future<List<Map<String, dynamic>>> achievements() async {
 
-      return await AppAchievementsDBHelper().getAllAchievements();
-  }
-
-  Future<List<Map<String, dynamic>>> progressData() async { 
-
-      return await AppAchievementsDBHelper().getProgressData();
+  Future<Map<String, dynamic>> getAllData() async {
+      final data_achievements = await AppAchievementsDBHelper().getAllAchievements();
+      final data_progress = await AppAchievementsDBHelper().getProgressData();
+      final data_level = await AppAchievementsDBHelper().getLevelData();
+      return {'achievements': data_achievements, 'progress':  data_progress, 'level': data_level};
   }
 
   @override
   Widget build(BuildContext context) {
 
     
-   AppAchievementService().update();
+   AppAchievementService().update(context);
 
-    return FutureBuilder<List<Map <String, dynamic>>> (
-      future: achievements(),
+    return FutureBuilder<Map<String, dynamic>> (
+      future: getAllData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -48,38 +47,29 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
           print ('No data available');
         }
 
-       _achievements = snapshot.data!;
+       final data = snapshot.data!;
+       _achievements = data['achievements']!;
+       final progressData = data['progress'];
+       final nextLevelData = data['level'];
+
        achievementsCount = _achievements.length;
 
-      return Column(
+       final userProgressData = progressData[0];
+       final userNextLevelData = nextLevelData[0];
+
+       userLevel = userProgressData['current_level'];
+       nextLevel = userProgressData['next_level'];
+
+       final nextLevelXp = userNextLevelData['min_xp'];
+       currentXp = userProgressData['user_xp'];
+       remainingXp = nextLevelXp - currentXp;
+       progress = currentXp.toDouble() / nextLevelXp.toDouble();
+
+       return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             //Title and Profile 
-            FutureBuilder<List<Map <String, dynamic>>> (
-            future: progressData(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error; Bottom: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('No data available'));
-              }
-            
-            final data = snapshot.data!;
-            final userProgressData = data[0];
-            final nextLevelData = data[1];
-
-            userLevel = userProgressData['current_level'];
-            nextLevel = userProgressData['next_level'];
-
-            final nextLevelXp = nextLevelData['min_xp'];
-            currentXp = userProgressData['user_xp'];
-
-            remainingXp = nextLevelXp - currentXp;
-            progress = currentXp.toDouble() / nextLevelXp.toDouble();
-
-            return Container(
+             Container(
               padding: EdgeInsets.all(20),
               color: Theme.of(context).colorScheme.surfaceContainerHigh,
               child: Row(
@@ -128,8 +118,7 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
                 ),
               ],
             ),
-           );})
-            ,
+            ),
             SizedBox(height: 20),
             Padding(
             padding: EdgeInsets.all(16),
@@ -204,7 +193,7 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
                                      text: TextSpan(
                                        children: [
                                          TextSpan(
-                                           text: "${achievement['min_xp'] - currentXp}xp ",
+                                           text: "+${achievement['min_xp']}",
                                            style: TextStyle(
                                              fontSize: 12,
                                              fontWeight: FontWeight.bold,
@@ -212,7 +201,7 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
                                            ),
                                          ),
                                          TextSpan(
-                                           text: 'left',
+                                           text: ' gained',
                                            style: TextStyle(
                                              fontSize: 10,
                                              fontWeight: FontWeight.bold,
@@ -234,9 +223,11 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
                  ),
              ),
          ], 
-       );
-      }
-   );
-  }
+      );
+     }
+    );
+   }
 }
+
+
 

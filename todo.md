@@ -41,6 +41,13 @@
 	- [x] Integrated achievements with database. 
 
 ## Thursday 10th April
-- [ ] Implement reward system.
+- [x] Fixed some DB bugs.
+
+## Firday 11th April.
+- [x] Fixed remaining DB bugs. 
+- [x] Reward system works now.
+- [x] User notification for achievements.
+
+## Saturday 12th April.
 - [ ] Implement Media Storage(s).
 - [ ] Implement phone app locking.

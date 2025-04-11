@@ -23,9 +23,7 @@ class AppGoalsHelper {
   Future<List<Map<String, dynamic>>> getAllGoals() async {
     Database db = await AppDB().database;
 
-    final data = await db.query('goals_data');
-    print(data);
-    return data;
+    return await db.query('goals_data');
   }
    
   GoalData goalFormat(Map<String, dynamic> goal) {
@@ -92,6 +90,5 @@ class AppGoalsHelper {
             updateGoal(goal);
          }
       }
-
   }
 }

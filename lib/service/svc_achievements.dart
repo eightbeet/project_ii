@@ -1,61 +1,8 @@
-/*
-achievement_system {
-
-   load_achievements_data
-
-      do_updates {
-      
-         check_personal_goals {
-            if goals_complete then award_bonus_xp
-         }
-      }
-      
-      advance() {
-         if user_has_achieved_a_goal {
-            calculate_xp
-            update_user_current_xp with calculated_xp in_database;
-         }
-
-         if user_current_xp >= next_level_xp {
-            then update_user_progresss_in_database {
-               update_level
-               update_xp
-            }
-            then update_user_achieveents_in_database
-
-            then update_accessible_media ??? 
-
-            then notify_user_of_upgrade
-         }
-      }
-   }
-
-
-   if has_reached_next_level_xp {
-      
-      award_achievement(pop up) @maybe achievement_animation
-      
-      update_achievments_list_in_ui
-
-      update_user_level_in_ui
-
-      unlock_perks(audio, video, art)
-      
-      notifiy_user_of unlocked_perks //?? 
-
-   }
-   
-   DETERMINE {
-      
-      goals_to_reward_ratio @ie 
-      how_much_xp_to_award @ie worth_of_1xp,
-      
-   }
-}
-*/
-
 import 'dart:math';
 import 'dart:async';
+
+
+import 'package:flutter/material.dart';
 
 import '../data/goals.dart';
 import '../data/data_achievements.dart';
@@ -64,50 +11,66 @@ import 'package:sqflite/sqflite.dart';
 import '../data/db.dart';
 
 class AppAchievementService {
-   
-   int currentXp = 0;
-   int nextLevelXp = 0;
    int currentLevel = 0;
+   int nextLevel = 0; 
    int achievementIndex = 0;
-   int bonusXp = 0;
+   int userXp = 0;
+   int nextLevelXp = 0;
+
    List<GoalData>goals = [];
 
-   void update() async {
-      // PROBLEM
-      final progress_data = await AppAchievementsDBHelper().getProgressData(); 
+   void update(BuildContext context) async {
+      // _resetProgress();
 
+      final progress_data = await AppAchievementsDBHelper().getProgressData(); 
+      final level_data = await AppAchievementsDBHelper().getLevelData(); 
       final goal_data = await AppGoalsHelper().getAllGoals();
+
+      currentLevel = progress_data[0]['current_level'];
+      nextLevel = progress_data[0]['next_level'];
+      userXp = progress_data[0]['user_xp'];
+      achievementIndex = progress_data[0]['achievement_index'];
+      
+      nextLevelXp = level_data[0]['min_xp'];
+
 
       for(var item in goal_data) {
         final goal = AppGoalsHelper().goalFormat(item);
         goals.add(goal);
       }
 
-      currentLevel = progress_data[0]['current_level'];
-      achievementIndex = progress_data[0]['achievement_index'];
-      currentXp = progress_data[0]['user_xp'];
-      nextLevelXp = progress_data[1]['min_xp'];
-
       for(var goal in goals) {
          AppGoalsHelper().checkGoalCompletion(goal);
       }
 
       for(var goal in goals) {
-         print("GOAL ${goal}");
          if(goal.isActive && goal.isAchieved) {
             goal.isActive = false;
-            currentXp += _calculateXpBonusFromGoal(goal); 
-            AppAchievementsDBHelper().updateProgressData(currentXp, currentLevel, achievementIndex); 
+            userXp += _calculateXpBonusFromGoal(goal); 
             AppGoalsHelper().updateGoal(goal);
          }
       }
+      
+      AppAchievementsDBHelper().updateProgressData(ProgressData(
+                                                      currentLevel: currentLevel,
+                                                      nextLevel: nextLevel,
+                                                      userXp: userXp, 
+                                                      achievementIndex: achievementIndex 
+    )); 
 
-      if(currentXp >= nextLevelXp) {
-         print("curr xp ${currentXp}: next xp ${nextLevelXp}");
-         print("Weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee NOOOOOOOOOOOOOoooooooooooooooooooo");
+      if(userXp >= nextLevelXp) {
          achievementIndex = achievementIndex + 1;
-         AppAchievementsDBHelper().updateProgressData(currentXp, currentLevel, achievementIndex); 
+         currentLevel = currentLevel + 1;
+         nextLevel = nextLevel + 1;
+         AppAchievementsDBHelper().updateProgressData(ProgressData(
+                                                      currentLevel: currentLevel,
+                                                      nextLevel: nextLevel,
+                                                      userXp: userXp, 
+                                                      achievementIndex: achievementIndex 
+            ));
+         notifyUser(context);
       }
+
       
    }
 
@@ -123,8 +86,47 @@ class AppAchievementService {
       
    }
 
-      // Database db = await AppDB().database;
-      // await db.update('progress_data', 
-      //                            {'next_level': 1, 'achievement_index': 0},
-      //                         where: 'id = ? ', whereArgs: [1]);
+   void _resetProgress() async {
+      Database db = await AppDB().database;
+      await db.update('progress_data',
+                      {'user_xp': 0, 'next_level': 1, 'achievement_index': 0},
+                      where: 'id = ? ', whereArgs: [1]);
+  }
+
+  void notifyUser(BuildContext context) {
+
+      final textColor = Theme.of(context).colorScheme.onPrimary;
+      final snackBarActionBgColor = Theme.of(context).colorScheme.primaryFixed.withValues(alpha: 0.2); 
+      final snackBarTextColor = Theme.of(context).colorScheme.onPrimary;
+      final snackBarBGColor = Theme.of(context).colorScheme.primary;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            action: SnackBarAction(
+              label: 'hide',
+              onPressed: () {},
+              backgroundColor: snackBarActionBgColor,
+              textColor: snackBarTextColor,
+            ),
+            content: Text('New Achievement Unlocked!', style : TextStyle( 
+            color: textColor,
+            )),
+            duration: const Duration(milliseconds: 20000),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8.0, // Inner padding for SnackBar content.
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(
+                     topLeft: Radius.zero,
+                     bottomLeft: Radius.circular(20),
+                     topRight: Radius.circular(20),
+                     bottomRight: Radius.zero,
+            )),
+            backgroundColor: snackBarBGColor,
+          ),
+      );
+   }
 }
+
+
+

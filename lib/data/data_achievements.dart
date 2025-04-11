@@ -20,6 +20,19 @@ class LevelData {
    LevelData({required this.level, required this.minXp});
 }
 
+class ProgressData {
+   int userXp;
+   int currentLevel;
+   int nextLevel;
+   int achievementIndex;
+      
+   ProgressData({required this.userXp,
+                 required this.currentLevel,
+                 required this.nextLevel,
+                 required this.achievementIndex
+   });
+}
+
 List<AchievementData> get achivementsData {
 
    return <AchievementData>[
@@ -46,15 +59,14 @@ class AppAchievementsDBHelper {
   Future<List<Map<String, dynamic>>> getProgressData() async { 
      // Here be fire breathers.
       Database db = await AppDB().database;
-      final list1 = await db.rawQuery('SELECT * FROM progress_data WHERE id = 1');
-      final at = list1[0]['next_level'];
-      final list2 = await db.rawQuery('SELECT * FROM level_data WHERE id = ${at}');
-
-      final a = await db.query('progress_data') ;
-      final b = await db.query('level_data') ;
-      print("PROGRESS DATA ${a}");
-      print("LEVEL DATA ${b}");
-      return [list1[0], list2[0]];
+      return await db.rawQuery('SELECT * FROM progress_data WHERE id = 1');
+  }
+   
+  Future<List<Map<String, dynamic>>> getLevelData() async { 
+      Database db = await AppDB().database;
+      final x = await db.rawQuery("SELECT next_level FROM progress_data WHERE id =1");
+      final idx = x[0]['next_level'];
+      return await db.rawQuery("SELECT * FROM level_data WHERE id = ${idx}");
   }
 
   void insertAchievement(AchievementData achievement) async {
@@ -69,25 +81,25 @@ class AppAchievementsDBHelper {
     Database db = await AppDB().database;
     final x = await db.rawQuery("SELECT achievement_index FROM progress_data WHERE id =1");
     final idx = x[0]['achievement_index'];
-    print('IDXX: ${idx}');
     return await db.rawQuery('SELECT * FROM achievements_data WHERE id BETWEEN 0 AND ${idx}');
   }
  
-  void initProgressData(int xp, int level) async {
+  void initProgressData(int xp, int level, int _nextLevel) async {
     Database db = await AppDB().database;
-    int nextLevel = level == LevelData.maxLevel ? LevelData.maxLevel : level + 1;
+    int nextLevel = level == LevelData.maxLevel ? LevelData.maxLevel : _nextLevel;
     final err = await db.insert('progress_data', 
                                {'id': 1, 'user_xp': xp, 'current_level': level, 'next_level': nextLevel});
     printStatusInfo(err, 'progress_data');
   }  
   
-  void updateProgressData(int xp, int level, int achievementIndex) async {
+  void updateProgressData(ProgressData progress) async {
       Database db = await AppDB().database;
-      final int id = 1;
-      final int nextLevel = level == LevelData.maxLevel ? level : LevelData.maxLevel;
-      final err = await db.update('progress_data', {'user_xp': xp, 'current_level': level,
-                                                    'next_level': nextLevel, 'achievement_index': achievementIndex}
-                                                   , where: 'id = ?', whereArgs: [id]);
+      final int nextLevel = progress.nextLevel == LevelData.maxLevel ? progress.nextLevel : LevelData.maxLevel;
+      final err = await db.update('progress_data', {'user_xp': progress.userXp,
+                                                    'current_level': progress.currentLevel,
+                                                    'next_level': progress.nextLevel,
+                                                    'achievement_index': progress.achievementIndex}
+                                                   , where: 'id = ?', whereArgs: [1]);
       printStatusInfo(err, 'progress_data');
   }
 
@@ -112,7 +124,7 @@ class AppAchievementsDBHelper {
        insertAchievement(achievement);
    }
    
-   initProgressData(0, 0);
+   // initProgressData(0, 0, 0);
   }
 
 }

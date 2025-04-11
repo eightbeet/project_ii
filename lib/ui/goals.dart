@@ -183,7 +183,6 @@ class _GoalsWidgetState extends State<GoalsWidget> {
         }
 
       goals = snapshot.data!;
-      print("GOALS :: ${goals}");
 
       return Column(
 
