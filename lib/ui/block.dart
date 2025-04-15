@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../service/svc_appblock.dart';
 
 class BlockWidget extends StatefulWidget {
   @override
@@ -8,7 +11,7 @@ class BlockWidget extends StatefulWidget {
 
 class _BlockWidgetState extends State<BlockWidget> {
   List<Application> _mediaApps = [];
-  Set<String> _selectedApps = {}; // Store selected apps
+  List<String> _selectedApps = []; 
   TextEditingController _searchController = TextEditingController();
 
   @override
@@ -40,7 +43,12 @@ class _BlockWidgetState extends State<BlockWidget> {
     });
   }
 
-  void _toggleSelection(String packageName) {
+  Future<void> _saveLockedApps() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('blockedApps', _selectedApps);
+  }
+
+ void _handleAppSelection(String packageName) {
     setState(() {
       if (_selectedApps.contains(packageName)) {
         _selectedApps.remove(packageName);
@@ -57,8 +65,8 @@ class _BlockWidgetState extends State<BlockWidget> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Theme.of(context).colorScheme.surfaceDim,
-          title: Text('Blocking Started'),
-          content: Text('Blocking apps: ${_selectedApps.join(', ')}'),
+          title: Text('Stage For Blocking'),
+          content: Text('Staging apps: ${_selectedApps.join(', ')}'),
           shape: RoundedRectangleBorder(
                      borderRadius: BorderRadius.circular(30),
           ),
@@ -70,6 +78,7 @@ class _BlockWidgetState extends State<BlockWidget> {
                         ),
                ),
                onPressed: () {
+                  AppMethodChannelController().stopBackgroundMonitoring();
                   Navigator.pop(context);
                },
                child: Text('Cancel'),
@@ -81,6 +90,8 @@ class _BlockWidgetState extends State<BlockWidget> {
                         ),
                ),
                onPressed: () {
+                  _saveLockedApps();
+                  AppMethodChannelController().startBackgroundMonitoring();
                   Navigator.pop(context);
                },
                child: Text('Ok'),
@@ -138,10 +149,10 @@ class _BlockWidgetState extends State<BlockWidget> {
                 return CheckboxListTile(
                   title: Text(app.appName),
                   subtitle: Text(app.packageName),
-                  value: _selectedApps.contains(app.appName),
+                  value: _selectedApps.contains(app.packageName),
                   onChanged: (bool? value) {
                     if (value != null) {
-                      _toggleSelection(app.appName);
+                       _handleAppSelection(app.packageName);
                     }
                   },
                   shape: RoundedRectangleBorder(

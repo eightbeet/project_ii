@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:async';
 
 import '../data/usage.dart';
+import '../service/svc_appblock.dart';
 
 class TimerWidget extends StatefulWidget {
   @override
@@ -28,6 +29,7 @@ class _TimerWidgetState extends State<TimerWidget> {
   final int maxSecond = 59;
 
   void _startTimer() {
+    // is runnig to true 
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -246,8 +248,9 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
     if (isTimerRunning && !isPaused) return; 
 
     isTimerRunning = true;
+    AppMethodChannelController().startBackgroundMonitoring();
 
-    _timer = Timer.periodic(Duration(milliseconds: 1), (timer) {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
         setState(() {
           if (totalSeconds > 0) {
             totalSeconds--;
@@ -259,6 +262,7 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
            print(saveSeconds); 
            AppUsageDBModify().saveUsageData(saveSeconds);
            _timer?.cancel();
+           AppMethodChannelController().stopBackgroundMonitoring();
            Navigator.pop(context); 
           }
         });
@@ -282,6 +286,7 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
     _timer?.cancel();
     setState(() {
       isTimerRunning = false;
+      AppMethodChannelController().stopBackgroundMonitoring();
       Navigator.pop(context);
     });
   }
@@ -298,9 +303,15 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
     // _circleColor = Theme.of(context).colorScheme.primary;
     // _circleColor = Theme.of(context).colorScheme.primary;
 
-    return Scaffold(
+   return WillPopScope(
+    onWillPop: () async {
+        return false;
+    },
+    child:
+    Scaffold(
       appBar: AppBar(
         title: Text('Timer Started'),
+        leading: const Icon(Icons.av_timer_rounded),
         backgroundColor: Theme.of(context).colorScheme.surfaceDim,
       ),
       body: Container(
@@ -374,6 +385,7 @@ class _TimerStartedPageState extends State<TimerStartedPage> {
              ),
             ],
           ),
+      ),
       ),
     );
   }

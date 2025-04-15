@@ -63,6 +63,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
             alignment: Alignment.center,
             child: [
                HomePageWidgets(),
+               // AppBlockSettingsScreen(),
                BlockWidget(),
                TimerWidget(),
                GoalsWidget(),
