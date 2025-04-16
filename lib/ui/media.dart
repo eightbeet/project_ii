@@ -1,16 +1,34 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+import '../data/media.dart';
+
 class MediaWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    List<Media> mediaData = fetchMediaData();
+    List<Media> mediaData = [];
 
-    List<Media> musicData = mediaData.where((item) => item.mediaType == "music").toList();
-    List<Media> imageData = mediaData.where((item) => item.mediaType == "image").toList();
+    List<Media> artData = []; //;mediaData.where((item) => item.mediaType == "music").toList();
+    List<Media> audioData = []; //mediaData.where((item) => item.mediaType == "image").toList();
 
     // return SingleChildScrollView(
-    return Container(
+    return FutureBuilder<List<Media>>(
+      future: AppMediaDBHelper().fetchMediaData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No data available'));
+        }
+
+        mediaData = snapshot.data!;
+      
+        artData = mediaData.where((item) => item.mediaType == "art").toList();
+        audioData = mediaData.where((item) => item.mediaType == "audio").toList();
+
+        return Container(
             margin: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             alignment: Alignment.center,
             decoration: BoxDecoration(
@@ -20,14 +38,15 @@ class MediaWidget extends StatelessWidget {
             child: Column(children: [
                buildTitleContainer(context),
                
-               buildSectionTitle('Music'),
-               buildMediaSection(musicData, context),
+               buildSectionTitle('Art'),
+               buildMediaSection(artData, context),
                
-               buildSectionTitle('Images'),
-               buildMediaSection(imageData, context),
-
+               buildSectionTitle('Audio'),
+               buildMediaSection(audioData, context),
           ],),
-      );
+       );
+      }
+    );
   }
 
   Widget buildTitleContainer(BuildContext context) {
@@ -186,86 +205,11 @@ class MediaWidget extends StatelessWidget {
     String action = media.mediaType == 'music' ? 'Downloading music' : 'Opening image';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$action: ${media.name}'),
+        content: Text('$action: ${media.title}'),
         duration: Duration(seconds: 2),
       ),
     );
       // [TODO:] [Actions]: 
   }
-}
- 
-class Media {
-  final String name;
-  final String author;
-  final String authorAvatarUrl;
-  final String description;
-  final String imageUrl;
-  final String mediaType;
-  final bool isUnlocked;
-
-  Media({
-    required this.name,
-    required this.author,
-    required this.authorAvatarUrl,
-    required this.description,
-    required this.imageUrl,
-    required this.mediaType,
-    required this.isUnlocked,
-  });
-}
-
-List<Media> fetchMediaData() {
-  return [
-
-    Media(
-      name: "Song 1",
-      author: "Artist 7",
-      authorAvatarUrl: "URL",
-      description: "A great song to listen to!",
-      imageUrl: "",
-      mediaType: "music",
-      isUnlocked: false,
-    ),
-
-    Media(
-      name: "Song 1",
-      author: "Artist 7",
-      authorAvatarUrl: "URL",
-      description: "A great song to listen to!",
-      imageUrl: "",
-      mediaType: "music",
-      isUnlocked: true,
-    ),
-
-    Media(
-      name: "Image 1",
-      author: "Photographer 1",
-      authorAvatarUrl: "URL",
-      description: "A beautiful image captured during the golden hour.",
-      imageUrl: "",
-      mediaType: "image",
-      isUnlocked: true,
-    ),
-
-    Media(
-      name: "Image 1",
-      author: "Photographer 1",
-      authorAvatarUrl: "URL",
-      description: "A beautiful image captured during the golden hour.",
-      imageUrl: "",
-      mediaType: "image",
-      isUnlocked: false,
-    ),
-
-    Media(
-      name: "Image 1",
-      author: "Photographer 1",
-      authorAvatarUrl: "URL",
-      description: "A beautiful image captured during the golden hour.",
-      imageUrl: "",
-      mediaType: "image",
-      isUnlocked: true,
-    )
-  ];
 }
 

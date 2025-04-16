@@ -9,10 +9,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:textColor= "#FFF9BA7CF"
+        android:textColor="@color/surfaceColor"
         android:text="WhatsApp Locked"
         android:textSize="24sp" />
 
-        <!-- android:textColor="@android:color/white FFFCFCFC" -->
 
 </FrameLayout>

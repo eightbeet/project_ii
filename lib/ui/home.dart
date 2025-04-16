@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -13,7 +15,10 @@ import 'media.dart';
 import 'stats.dart';
 import 'chat.dart';
 import 'dummy.dart';
+
 import '../data/usage.dart';
+import '../data/about.dart';
+import '../data/media.dart';
 
 late final SharedPreferences prefs;
 
@@ -58,12 +63,12 @@ class _AppMainWidgetState extends State<AppMainWidget> {
             title: const Text("Project II"),
             backgroundColor: Theme.of(context).colorScheme.surfaceDim,
         ),
+        drawer: AppDrawer(),
         body: Center(
           child: Container(
             alignment: Alignment.center,
             child: [
                HomePageWidgets(),
-               // AppBlockSettingsScreen(),
                BlockWidget(),
                TimerWidget(),
                GoalsWidget(),
@@ -419,5 +424,280 @@ class ChartsSection extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class AppDrawer extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+     return BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+        child: Drawer(
+          backgroundColor: Theme.of(context).colorScheme.shadow.withOpacity(0.3), // Optional: Semi-transparent drawer content
+            child: ListView(
+               padding: EdgeInsets.zero,
+               children: [
+                 DrawerHeader(
+                   decoration: BoxDecoration(
+                   color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3), // Optional: Semi-transparent drawer content
+                   ),
+                   child: Center(child: Text('...', style: TextStyle(
+                             fontSize: 32,
+                             color: Theme.of(context).colorScheme.surfaceBright,
+                            ))),
+                 ),
+                 ListTile(
+                   leading: Icon(Icons.settings, color: Theme.of(context).colorScheme.outline),
+                   title: Text('Settings', 
+                                    style: TextStyle(
+                                       color: Theme.of(context).colorScheme.surfaceBright
+                                 ),
+                              ),
+                   onTap: () {
+                     // Update the state of the app.
+                     // ...
+                   },
+                 ),
+                 Divider(),
+                 ListTile(
+                   leading: Icon(Icons.info_outline, color: Theme.of(context).colorScheme.outline),
+                    title: Text('About', 
+                                    style: TextStyle(
+                                       color: Theme.of(context).colorScheme.surfaceBright
+                                 ),
+                              ),
+                   onTap: () {
+
+                     Navigator.of(context).push(
+                             MaterialPageRoute(
+                               builder: (BuildContext context) => AboutWidget(
+                                     cardTitle: 'Um v 0.1.0',
+                                     cardDescription: 'This is a brief description of the featured item. It can span multiple lines.',
+                                     cardImage: 'assets/placeholder_image.png', // Replace with your image path
+                                     listItems: [ 
+                                        ListItemData(
+                                          leadingIcon: MdiIcons.github,
+                                          title: 'Source code',
+                                          description: 'https://github.com/eightbeet/project_ii',
+                                        ),
+                                        ListItemData(
+                                          leadingIcon: MdiIcons.license,
+                                          title: 'License',
+                                          description: 'GNU GPLv3',
+                                        ),
+                                        ListItemData(
+                                          leadingIcon: MdiIcons.library,
+                                          title: 'Third-party libraries',
+                                          description: 'Click here to see libraries the app depends on',
+                                          action: () {
+                                                    Navigator.of(context).push(
+                                                            MaterialPageRoute(
+                                                              builder: (BuildContext context) => ThirdPartyWidget()
+                                                            ));
+                                                  } 
+                                        ),
+                                        // Add more ListItems here
+                                      ],
+                                    )
+                               )
+                             );
+
+                     // Update the state of the app.
+                     // ...
+                   },
+                 ),
+              ],
+          ),
+        )
+     );
+  }
+}
+
+class AboutWidget extends StatelessWidget {
+  final String cardTitle;
+  final String cardDescription;
+  final String cardImage;
+  final List<ListItemData> listItems;
+
+  const AboutWidget({
+    Key? key,
+    required this.cardTitle,
+    required this.cardDescription,
+    required this.cardImage,
+    required this.listItems,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar( 
+         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+         title: const Text("About") 
+      ),
+      body: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+         Card(
+           margin: const EdgeInsets.all(8.0),
+           color: Theme.of(context).scaffoldBackgroundColor,
+           elevation: 0,
+           shape: RoundedRectangleBorder(
+             side: BorderSide(color: Colors.transparent, width: 0),
+             borderRadius: BorderRadius.circular(0),
+           ),
+           child: Padding(
+             padding: const EdgeInsets.all(16.0),
+             child: Column( // Outer Column
+               crossAxisAlignment: CrossAxisAlignment.start, // Align column content to the start
+               children: [
+                 Row( // Row for Title and Image
+                   children: [
+                     SizedBox(
+                       width: 200.0, // Adjust width as needed
+                       height: 200.0, // Adjust height as needed
+                       child: Image.asset(
+                         cardImage,
+                         fit: BoxFit.cover,
+                         errorBuilder: (context, error, stackTrace) {
+                           return const Center(child: Icon(Icons.image_not_supported));
+                         },
+                       ),
+                     ),
+                     const SizedBox(width: 16.0),
+                     Expanded(
+                       child: Text(
+                         cardTitle,
+                         style: const TextStyle(
+                           fontSize: 18.0,
+                           fontWeight: FontWeight.bold,
+                         ),
+                       ),
+                     ),
+                   ],
+                 ),
+                 const SizedBox(height: 8.0), // Add some spacing between the row and description
+                 Text(
+                   cardDescription,
+                   style: const TextStyle(fontSize: 14.0),
+                   textAlign: TextAlign.start, // Align description to the start
+                 ),
+               ],
+             ),
+           ),
+         ),
+        Expanded(
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(), 
+            itemCount: listItems.length,
+            itemBuilder: (context, index) {
+              final item = listItems[index];
+              return Column(
+                children: [
+                Container( 
+                  margin: const EdgeInsets.all(8.0),
+                  child: Material(
+                    elevation: 2,
+                    // borderRadius: BorderRadius.circular(4),
+                    shape: RoundedRectangleBorder(
+                        side: BorderSide(color: Theme.of(context).colorScheme.surfaceDim, width: 1.0),
+                        borderRadius: BorderRadius.circular(4),
+                     ),
+                    child: InkWell(
+                      onTap: item.action,
+                      
+                      child: ListTile(
+                        leading: Icon(item.leadingIcon, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8)),
+                        title: Text(item.title, style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.bold)),
+                        subtitle: item.description != null ? Text(item.description!, style: TextStyle(color: Theme.of(context).colorScheme.primary)) : null,
+                      ),
+                    ),
+                  ),
+                 ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+     )
+    );
+  }
+}
+
+class ListItemData {
+  final IconData leadingIcon;
+  final String title;
+  final String? description;
+  final void Function()? action;
+
+  ListItemData({
+    this.action,
+    required this.leadingIcon,
+    required this.title,
+    this.description,
+  });
+}
+
+
+class ThirdPartyWidget extends StatelessWidget{
+  List<Map<String, dynamic>> listItems = AboutData().getPackageData();
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar( 
+         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+         title: const Text("Third Party") 
+      ),
+      body: SingleChildScrollView(
+         child: Expanded(
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(), 
+            itemCount: listItems.length,
+            itemBuilder: (context, index) {
+              final item = listItems[index];
+              final textStyleTitle = TextStyle(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.7), fontWeight: FontWeight.bold);
+              final textStyleContent = TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant);
+ 
+              return Container( 
+                  child: Card(
+                  margin: const EdgeInsets.all(8.0),
+                  elevation: 4,
+                  child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column( // Outer Column
+                     crossAxisAlignment: CrossAxisAlignment.start, // Align column content to the start
+                     children: [
+                         SizedBox(height: 8.0),
+                         Text('Version', style: textStyleTitle),
+                         Text(' ${item["version"]}', style: textStyleContent),
+
+                         SizedBox(height: 8.0),
+                         Text('Author', style: textStyleTitle),
+                         Text('${item["author"]}', style: textStyleContent),
+
+                         SizedBox(height: 8.0),
+                         Text('License', style: textStyleTitle),
+                         Text('${item["License"]}', style: textStyleContent),
+
+                         SizedBox(height: 8.0),
+                         Text('Homepage', style: textStyleTitle),
+                         Text('${item["homepage"]}', style: textStyleContent),
+
+                         SizedBox(height: 8.0),
+                         Text('Description', style: textStyleTitle),
+                         Text('${item["description"]}', style: textStyleContent),
+                     ],
+                      ),
+                    ),
+                   ),
+                 );
+               },
+            ),
+         ), 
+        ),
+     );
   }
 }

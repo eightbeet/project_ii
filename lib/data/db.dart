@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'data_achievements.dart'; 
+import 'media.dart';
 
 class AppDB {
 
@@ -22,7 +23,7 @@ class AppDB {
    Future<Database> _initDatabase() async {
       var databasesPath = await getDatabasesPath();
       String path = join(databasesPath, 'app.db');
-      return await openDatabase(path, version: 7, onCreate: _onCreate, onUpgrade: _onUpgrade);
+      return await openDatabase(path, version: 8, onCreate: _onCreate, onUpgrade: _onUpgrade);
    }
    
    Future _onCreate(Database db, int version) async {
@@ -36,15 +37,20 @@ class AppDB {
 
 Future _onUpgrade(Database db, int oldVersion, int newVersion ) async {
       var batch = db.batch(); 
-      if(oldVersion < 7) {
+      if(oldVersion < 8) {
 
-         await db.execute(
-              'DROP TABLE goals_data'
+        await db.execute(
+                  'CREATE TABLE media_data(id INTEGER PRIMARY KEY AUTOINCREMENT, media_type TEXT, title TEXT, author TEXT, avatar_url TEXT, description TEXT, media_url TEXT, is_unlocked INTEGER , min_xp INTEGER)'
          );
 
-         await db.execute(
-              'CREATE TABLE goals_data(id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT,duration INTEGER, active_status INTEGER,achieve_status INTEGER)'
-         );
+        AppMediaDBHelper().init();
+
+         // await db.execute(
+         //      'DROP TABLE goals_data'
+         // );
+//          await db.execute(
+//               'CREATE TABLE goals_data(id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT,duration INTEGER, active_status INTEGER,achieve_status INTEGER)'
+//          );
 
          // await db.execute(
          //    'ALTER TABLE progress_data ADD achievement_index INTEGER'
@@ -67,6 +73,7 @@ Future _onUpgrade(Database db, int oldVersion, int newVersion ) async {
          // );
 
          // AppAchievementsDBHelper().initAll();
+         
       }
 
 }
