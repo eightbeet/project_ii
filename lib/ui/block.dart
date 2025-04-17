@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../service/svc_appblock.dart';
 
+import 'shimmer.dart';
+
 class BlockWidget extends StatefulWidget {
   @override
   _BlockWidgetState createState() => _BlockWidgetState();
@@ -140,7 +142,7 @@ class _BlockWidgetState extends State<BlockWidget> {
         ),),
       Expanded(  child: Container(
       child: _mediaApps.isEmpty
-          ? Center(child: CircularProgressIndicator())
+          ? BlockShimmer()
           : ListView.separated(
               itemCount: _mediaApps.length,
                // physics: const NeverScrollableScrollPhysics(),

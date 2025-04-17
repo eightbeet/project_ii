@@ -15,10 +15,12 @@ import 'media.dart';
 import 'stats.dart';
 import 'chat.dart';
 import 'dummy.dart';
+import 'shimmer.dart';
 
 import '../data/usage.dart';
 import '../data/about.dart';
 import '../data/media.dart';
+import '../data/quotes.dart';
 
 late final SharedPreferences prefs;
 
@@ -33,6 +35,12 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
   int currentPageIndex = 0;
 
+  void moveTo() {  
+     setState(() {
+        currentPageIndex = 5;
+     });
+  }
+
   Widget HomePageWidgets() {
       return SingleChildScrollView(
          child: Column(
@@ -40,7 +48,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
                //  AppShillSection(),
                TimerSection(),
                UsageSection(),
-               ChartsSection(),
+               ChartsSection(indexCallback: moveTo),
                MediaWidget(),
             ],
          ),
@@ -56,11 +64,98 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       );
   }
 
+  Future<bool> isFirstLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isFirst = prefs.getBool('first_launch') ?? true;
+    if (isFirst) {
+       await prefs.setBool('first_launch', false);
+    }
+    return isFirst;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFirstLaunchAndDisplayQuote();
+  }
+   
+ Future<void> _checkFirstLaunchAndDisplayQuote() async {
+    final _isFirst = await isFirstLaunch();
+    if (_isFirst) {
+       Map<String, dynamic>quote = QuotesData().getRandomQuote(); 
+        _showQuoteDialog(quote);
+      }
+ }
+
+  void _showQuoteDialog(Map<String, dynamic> quote) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent closing by tapping outside
+      builder: (BuildContext context) {
+        return BackdropFilter(
+         filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+         child: AlertDialog(
+         title: Text('Quote', style: TextStyle(fontSize: 48, fontFamily: 'Tangerine', fontWeight: FontWeight.bold)),
+         backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+         shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(
+                     topLeft: Radius.zero,
+                     bottomLeft: Radius.circular(40),
+                     topRight: Radius.circular(40),
+                     bottomRight: Radius.circular(40),
+         )),
+         content: Column(
+         mainAxisSize: MainAxisSize.min,
+         crossAxisAlignment: CrossAxisAlignment.start,
+         
+         children: <Widget>[
+            Text(
+              "\"${quote['quote']}\"",
+              style: TextStyle(
+                fontSize: 32.0,
+                fontFamily: 'Tangerine',
+              ),
+            ),
+            SizedBox(height: 8.0),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Text(
+                "- ${quote['author']}",
+                style: TextStyle(
+                  fontSize: 24.0,
+                  fontFamily: 'Tangerine',
+                  // fontWeight: FontWeight.bold,
+                  // color: Theme.of(context).colorScheme.outline,// .withValues(alpha: 0.8),
+                ),
+              ),
+            ),
+          ],
+        ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-            title: const Text("Project II"),
+            title: Container(
+                     decoration: BoxDecoration(
+                       color: Theme.of(context).colorScheme.primaryContainer,
+                       borderRadius: BorderRadius.circular(10),
+                     ),
+                     padding: EdgeInsets.all(10),
+                     child: Text("Ум", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
+                  ),
             backgroundColor: Theme.of(context).colorScheme.surfaceDim,
         ),
         drawer: AppDrawer(),
@@ -68,6 +163,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
           child: Container(
             alignment: Alignment.center,
             child: [
+               // StatsShimmer(),
                HomePageWidgets(),
                BlockWidget(),
                TimerWidget(),
@@ -160,6 +256,7 @@ class TimerSection extends StatelessWidget {
                 const Icon(Icons.timer_rounded),
             ],
           ),
+          SizedBox(height: 20),
           Center(
             child: ElevatedButton(
                style: ElevatedButton.styleFrom(
@@ -168,39 +265,18 @@ class TimerSection extends StatelessWidget {
                   ),
                 ),
                onPressed: () {
-                  TimerWidget.startInstantTimer(context, 0, 2, 5);
-                  // [TODO]:Add Action
+                  TimerWidget.startInstantTimer(context, 0, 2, 0);
               },
               child: Text('Start', style: TextStyle(fontSize: 20)),
             ),
           ),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: chipValues.map((chipValue) {
-              return GestureDetector(
-                onTap: () {
-                  // [TODO]: Add Action
-                  print("Clicked on chip with value: $chipValue");
-                },
-                child: Chip(
-                  label: Text(chipValue.toString(), style: TextStyle(color: Theme.of(context).primaryColor),),
-                  padding: EdgeInsets.only(left: 10, right: 10),
-                  elevation: 0, 
-                  backgroundColor: Colors.transparent,
-                  side: BorderSide(
-                      color:  Theme.of(context).primaryColor, 
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.horizontal(
-                      left: Radius.circular(18),   
-                      right: Radius.circular(18),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+          SizedBox(height: 20),
+          Text("2 minutes", style:
+                        TextStyle(
+                           fontSize: 20,
+                           fontWeight: FontWeight.bold,
+                           color: Theme.of(context).colorScheme.primary,
+           )),
         ]
       ),
     );
@@ -231,13 +307,27 @@ class UsageSection extends StatelessWidget {
     ];
   }
 
+  Widget UsageTag(String text, BuildContext context) => Container(
+      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(50.0),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+      ),
+   );
+
   @override
   Widget build(BuildContext context) {
+    final textColor = Theme.of(context).colorScheme.primary;
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: timeData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          // return Center(child: CircularProgressIndicator());
+          return UsageShimmer();
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -253,7 +343,7 @@ class UsageSection extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12), 
           ),
           child: Column(
             children: [
@@ -266,7 +356,6 @@ class UsageSection extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
                     ),
                   ),
                 ),
@@ -279,30 +368,31 @@ class UsageSection extends StatelessWidget {
                    width: 150, 
                    height: 200,
                    decoration: BoxDecoration(
-                     color: Theme.of(context).colorScheme.primaryContainer,
+                     color: Theme.of(context).colorScheme.surfaceContainer,
                      borderRadius: BorderRadius.circular(12),
+                     boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3), // Shadow color
+                                  spreadRadius: 5, // Spread radius
+                                  blurRadius: 5, // Blur radius
+                                  offset: Offset(0, 3), // changes position of shadow
+                                ),
+                              ],
                    ),
-                    child: Padding(
+                   child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '${data['tag']}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.normal,
-                              color: Colors.black,
-                            ),
-                          ),
+                          UsageTag('${data["tag"]}', context),
                           SizedBox(height: 10),
                           Text(
                             '${data['hours']} Hrs',
                             style: TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.w100,
-                              color: Colors.black,
+                              color: textColor,
                             ),
                           ),
                           SizedBox(height: 5),
@@ -313,7 +403,7 @@ class UsageSection extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w300,
-                                color: Colors.black,
+                                color: textColor,
                               ),
                             ),
                           ),
@@ -323,7 +413,7 @@ class UsageSection extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.normal,
-                              color: Colors.black,
+                              color: textColor,
                             ),
                           ),
                         ],
@@ -342,87 +432,51 @@ class UsageSection extends StatelessWidget {
 }
 
 class ChartsSection extends StatelessWidget {
-   // [DUMMYDATA]
-   // [DUMMYWAIT]
-  Future<List<Map<String, int>>> fetchTimeData() async {
-    await Future.delayed(Duration(seconds: 2));
-    return [
-      {'hours': 12, 'minutes': 30, 'seconds': 45},
-      {'hours': 2, 'minutes': 15, 'seconds': 30},
-      {'hours': 8, 'minutes': 5, 'seconds': 59},
-      {'hours': 23, 'minutes': 59, 'seconds': 59},
-      {'hours': 10, 'minutes': 25, 'seconds': 13},
-      {'hours': 5, 'minutes': 59, 'seconds': 59},
-    ];
-  }
-
+  final void Function() indexCallback;
+  ChartsSection({required this.indexCallback});
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Map<String, int>>>(
-      future: fetchTimeData(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No data available'));
-        }
-
-        final timeData = snapshot.data!;
-
-        List<BarChartGroupData> barChartData = timeData.map((data) {
-          return BarChartGroupData(x: data['hours'] ?? 0, barRods: [
-            BarChartRodData(
-              toY: (data['hours'] ?? 0).toDouble(),
-              color: Colors.blue,
-              width: 16,
-              borderRadius: BorderRadius.zero,
-            ),
-          ]);
-        }).toList();
-
-        return Center(
-          child: Container(
-            padding: EdgeInsets.all(20),
-            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: Text(
-                      'Stats',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
+    return Stack(
+    children:[ 
+     Center(
+       child: Container(
+        padding: EdgeInsets.all(20),
+        margin: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(12), 
+        ),
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Text(
+                  'Stats',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
-                SizedBox(
-                  height: 300,
-                  child: BarChart(
-                    BarChartData(
-                      borderData: FlBorderData(show: false),
-                      titlesData: FlTitlesData(show: true),
-                      gridData: FlGridData(show: true),
-                      barGroups: barChartData,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
+            DummyChart(),
+          ],
+        ),
+      ),
+     ),
+       Positioned(
+            top: 8, 
+            right: 8,
+            child: IconButton(
+              icon: Icon(Icons.arrow_circle_right_rounded, color: Theme.of(context).colorScheme.secondary),
+              onPressed: indexCallback,
+            ),
+          )
+     ]
     );
   }
 }
@@ -440,7 +494,7 @@ class AppDrawer extends StatelessWidget {
                children: [
                  DrawerHeader(
                    decoration: BoxDecoration(
-                   color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3), // Optional: Semi-transparent drawer content
+                   color: Theme.of(context).colorScheme.surfaceDim.withOpacity(0.3), // Optional: Semi-transparent drawer content
                    ),
                    child: Center(child: Text('...', style: TextStyle(
                              fontSize: 32,
@@ -700,4 +754,250 @@ class ThirdPartyWidget extends StatelessWidget{
         ),
      );
   }
+}
+
+
+class DummyChart extends StatefulWidget {
+  DummyChart({super.key});
+
+  @override
+  State<DummyChart> createState() => _DummyChartState();
+}
+
+class _DummyChartState extends State<DummyChart> {
+  int selectedDataSetIndex = -1;
+  double angleValue = 0;
+  bool relativeAngleMode = true;
+
+  Color gridColor = Colors.transparent;
+  Color titleColor = Colors.transparent; // Colors.purple.withValues(alpha: 0.8);
+  Color superColor = Colors.transparent; // Colors.red;
+  Color coolColor = Colors.transparent; // Colors.cyan;
+  Color appColor = Colors.transparent;
+  Color altpColor = Colors.transparent;
+  Color highColor = Colors.transparent;
+
+  @override
+  Widget build(BuildContext context) {
+
+   gridColor = Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8);
+   titleColor = Theme.of(context).colorScheme.primary.withValues(alpha: 0.8);
+   superColor = Theme.of(context).colorScheme.secondary;
+   coolColor = Theme.of(context).colorScheme.primaryContainer;
+   altpColor =  Theme.of(context).colorScheme.onPrimary;
+   appColor = Theme.of(context).colorScheme.primary;
+   highColor = Theme.of(context).colorScheme.error.withValues(alpha: 0.3);
+
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: rawDataSets()
+                .asMap()
+                .map((index, value) {
+                  final isSelected = index == selectedDataSetIndex;
+                  return MapEntry(
+                    index,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedDataSetIndex = index;
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(vertical: 2),
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primaryFixed
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(46),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 6,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInToLinear,
+                              padding: EdgeInsets.all(isSelected ? 8 : 6),
+                              decoration: BoxDecoration(
+                                color: value.color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInToLinear,
+                              style: TextStyle(
+                                color:
+                                    isSelected ? value.color : gridColor,
+                              ),
+                              child: Text(value.title),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                })
+                .values
+                .toList(),
+          ),
+          AspectRatio(
+            aspectRatio: 1.3,
+            child: RadarChart(
+              RadarChartData(
+                radarTouchData: RadarTouchData(
+                  touchCallback: (FlTouchEvent event, response) {
+                    if (!event.isInterestedForInteractions) {
+                      setState(() {
+                        selectedDataSetIndex = -1;
+                      });
+                      return;
+                    }
+                    setState(() {
+                      selectedDataSetIndex =
+                          response?.touchedSpot?.touchedDataSetIndex ?? -1;
+                    });
+                  },
+                ),
+                dataSets: showingDataSets(),
+                radarBackgroundColor: Colors.transparent,
+                borderData: FlBorderData(show: false),
+                radarBorderData: const BorderSide(color: Colors.transparent),
+                titlePositionPercentageOffset: 0.2,
+                titleTextStyle:
+                    TextStyle(color: titleColor, fontSize: 24),
+                getTitle: (index, angle) {
+                  final usedAngle =
+                      relativeAngleMode ? angle + angleValue : angleValue;
+                  switch (index) {
+                    case 0:
+                      return RadarChartTitle(
+                        text: 'ᛃ', // present 
+                        angle: usedAngle,
+                      );
+                    case 2:
+                      return RadarChartTitle(
+                        text: 'ᚨ', // past
+                        angle: usedAngle,
+                      );
+                    case 1:
+                      return RadarChartTitle(text: 'ᚱ', angle: usedAngle); // future
+                    default:
+                      return const RadarChartTitle(text: '');
+                  }
+                },
+                tickCount: 1,
+                ticksTextStyle:
+                    const TextStyle(color: Colors.transparent, fontSize: 10),
+                tickBorderData: const BorderSide(color: Colors.transparent),
+                gridBorderData: BorderSide(color: gridColor, width: 2),
+              ),
+              duration: const Duration(milliseconds: 400),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<RadarDataSet> showingDataSets() {
+    return rawDataSets().asMap().entries.map((entry) {
+      final index = entry.key;
+      final rawDataSet = entry.value;
+
+      final isSelected = index == selectedDataSetIndex
+          ? true
+          : selectedDataSetIndex == -1
+              ? true
+              : false;
+
+      return RadarDataSet(
+        fillColor: isSelected
+            ? rawDataSet.color.withValues(alpha: 0.2)
+            : rawDataSet.color.withValues(alpha: 0.05),
+        borderColor: isSelected
+            ? rawDataSet.color
+            : rawDataSet.color.withValues(alpha: 0.25),
+        entryRadius: isSelected ? 3 : 2,
+        dataEntries:
+            rawDataSet.values.map((e) => RadarEntry(value: e)).toList(),
+        borderWidth: isSelected ? 2.3 : 2,
+      );
+    }).toList();
+  }
+
+  List<RawDataSet> rawDataSets() {
+    return [
+      RawDataSet(
+        title: 'time',
+        color: superColor,
+        values: [
+          300,
+          50,
+          250,
+        ],
+      ),
+      RawDataSet(
+        title: 'khronos',
+        color: coolColor,
+        values: [
+          250,
+          100,
+          200,
+        ],
+      ),
+      RawDataSet(
+        title: 'час',
+        color: appColor,
+        values: [
+          200,
+          150,
+          50,
+        ],
+      ),
+      RawDataSet(
+        title: 'tid',
+        color: altpColor,
+        values: [
+          200,
+          150,
+          50,
+        ],
+      ),
+      RawDataSet(
+        title: 'zeit',
+        color: highColor,
+        values: [
+          200,
+          150,
+          50,
+        ],
+      ),
+    ];
+  }
+}
+
+class RawDataSet {
+  RawDataSet({
+    required this.title,
+    required this.color,
+    required this.values,
+  });
+
+  final String title;
+  final Color color;
+  final List<double> values;
 }

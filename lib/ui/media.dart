@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 import '../data/media.dart';
 
@@ -80,18 +83,42 @@ class MediaWidget extends StatelessWidget {
     );
   }
 
-  Color getRandomColor() {
-    Random random = Random();
-    return Color.fromARGB(
-      255, 
-      random.nextInt(256), 
-      random.nextInt(256), 
-      random.nextInt(256), 
+  void handleMediaOnClick(Media media, BuildContext context) {
+     if(media.isUnlocked == true) {
+      Widget _media = ImagePage(media: media);
+      switch(media.mediaType){
+         case 'art': _media = ImagePage(media: media);
+         case 'audio': _media = AudioPage(media: media);
+      }
+      Navigator.of(context).push(
+       MaterialPageRoute(
+         builder: (BuildContext context) => _media, 
+       )
     );
+   }
   }
-  
-  Color getFadedColor(Color color, {double opacity = 0.3}) {
-    return color.withOpacity(opacity);
+
+  List<Color> getGradientColors(String mediaType, BuildContext context) {
+     final colorScheme = Theme.of(context).colorScheme;
+     if(mediaType == "art") {
+        return [
+            colorScheme.primary,
+            colorScheme.surface.withValues(alpha: 0.3),
+            colorScheme.secondaryFixed,
+        ];
+     }
+     if(mediaType == "audio") {
+         return [
+            colorScheme.secondary,
+            colorScheme.surface.withValues(alpha: 0.3),
+            colorScheme.primaryFixed,
+        ];
+     }
+     return [
+            colorScheme.error,
+            colorScheme.surface.withValues(alpha: 0.3),
+            colorScheme.surfaceDim,
+        ];;
   }
 
   Widget buildMediaSection(List<Media> mediaList, BuildContext context) {
@@ -103,12 +130,8 @@ class MediaWidget extends StatelessWidget {
         itemCount: mediaList.length,
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemBuilder: (context, index) {
+
           Media media = mediaList[index];
-  
-          Color color1 = getRandomColor();
-          Color color2 = getFadedColor(color1, opacity: 0.3); 
-          Color color3 = getRandomColor();
-  
           return Card(
             margin: EdgeInsets.symmetric(horizontal: 8),
             shape: RoundedRectangleBorder(
@@ -129,13 +152,12 @@ class MediaWidget extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [color1, color2, color3],
+                          colors: getGradientColors(media.mediaType, context),
                           stops: [0.0, 0.5, 1.0],
                         ),
-                        // image: DecorationImage(
-                        //   image: NetworkImage(media.imagUrl),
-                        //   fit: BoxFit.cover,
-                        // ),
+                      ),
+                     child: InkWell(
+                        onTap: (){ handleMediaOnClick(media, context); },
                       ),
                     ),
                     //lock icon or overlay for when media is locked
@@ -213,3 +235,207 @@ class MediaWidget extends StatelessWidget {
   }
 }
 
+
+
+class ImagePage extends StatelessWidget {
+  Media media;
+  
+  ImagePage({required this.media});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Image Viewer"),
+        backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+      ),
+      body: Stack(
+        children: [
+          // Gradient Background
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.secondary,
+                ],
+              ),
+            ),
+          ),
+
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+            child: Center(
+              child: Container(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              alignment: Alignment.center,
+              width: double.infinity,
+              height: 300,
+              child:  InteractiveViewer(
+                  minScale: 0.1,
+                  maxScale: 1.6, 
+                  child: Container(
+                    child: Image.network(media.mediaUrl),
+                   ), 
+                  ),
+                 
+                ), 
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class AudioPage extends StatefulWidget {
+   Media media; 
+   AudioPage({super.key, required this.media});
+
+   @override 
+   _AudioPageState createState() => _AudioPageState(media: media);
+}
+
+class _AudioPageState extends State<AudioPage>{
+  Media media;
+  final player = AudioPlayer();
+  bool isPlaying = false; 
+  Duration duration = Duration.zero;
+  Duration position = Duration.zero;
+
+   _AudioPageState({required this.media});
+   
+  @override 
+  void initState() {
+     super.initState();
+
+     player.onPlayerStateChanged.listen((state) {
+        setState((){
+         isPlaying = state == PlayerState.playing;
+         });
+     });
+
+     player.onDurationChanged.listen((newDuration) {
+       setState((){
+         duration = newDuration;
+         });
+     });
+
+     player.onPositionChanged.listen((newPosition) {
+       setState((){
+         position = newPosition;
+         });
+     });
+  }
+
+  String formatAudioTime(Duration duration) {
+     String twoDigitTime(int time) => time.toString().padLeft(2, '0');
+     final hours = twoDigitTime(duration.inHours);
+     final minutes = twoDigitTime(duration.inMinutes.remainder(60));
+     final seconds = twoDigitTime(duration.inSeconds.remainder(60));
+     return [if(duration.inHours > 0) hours, minutes, seconds].join(':');
+  }
+
+  
+  @override
+  Widget build(BuildContext context) {
+   final authorNameStyle = TextStyle(color: Theme.of(context).colorScheme.surfaceDim, fontWeight: FontWeight.w300);
+   final authorTitleStyle = TextStyle(color: Theme.of(context).colorScheme.surfaceDim.withValues(alpha: 0.8), fontWeight: FontWeight.bold);
+   final progressTextStyle = TextStyle(color: Theme.of(context).colorScheme.surfaceDim.withValues(alpha: 0.8));
+   
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Audio Player"),
+        backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+      ),
+      body: Stack(
+        children: [
+          // Gradient Background
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.secondary,
+                  Theme.of(context).colorScheme.primary,
+                ],
+              ),
+            ),
+          ),
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+            child: Center(
+              child: Container(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              alignment: Alignment.center,
+              width: double.infinity,
+              height: 350,
+              child:  Column(
+                  children: [
+                    SizedBox(height: 10),
+                     InteractiveViewer(
+                     minScale: 0.1,
+                     maxScale: 1.6, 
+                     child: Container(
+                       child: ClipRRect(
+                       borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                         media.authorAvatarUrl,
+                           height: 150,
+                         fit: BoxFit.fill,
+                        ),
+                       ),
+                      ), 
+                    ), 
+                    SizedBox(height: 10),
+                    
+                    Text("Music by", style: authorTitleStyle),
+                    Text("${media.author}", style: authorNameStyle),
+                    SizedBox(height: 10),
+
+                    Slider(
+                     min: 0,
+                     max: duration.inSeconds.toDouble(),
+                     value: position.inSeconds.toDouble(),
+                     activeColor: Theme.of(context).colorScheme.primaryContainer,
+                     thumbColor: Theme.of(context).colorScheme.primaryContainer,
+                     onChanged: (value) async {
+                        final position = Duration(seconds: value.toInt());
+                        await player.seek(position);
+                        await player.resume();
+                     },
+                    ),
+                    Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                           children: [
+                              Text(formatAudioTime(position), style: progressTextStyle ),
+                              Text(formatAudioTime(duration - position), style: progressTextStyle),
+                           ],
+                        ),
+                    ),
+
+                    CircleAvatar(
+                      radius: 20,
+                      child: IconButton(
+                         icon: Icon( isPlaying ? Icons.pause : Icons.play_arrow),
+                         onPressed: () async {
+                         if (isPlaying) {
+                            await player.pause();
+                         } else {
+                            await player.play(UrlSource(media.mediaUrl));
+                         }
+                       },
+                    ),
+                  ),
+                ]  
+                ), 
+                ), 
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

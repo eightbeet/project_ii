@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-
 import '../data/data_achievements.dart';
 import '../service/svc_achievements.dart';
+
+import 'shimmer.dart';
 
 class AchievementsWidget extends StatefulWidget {
   @override
@@ -40,7 +41,7 @@ class _AchievementsWidgetState extends State<AchievementsWidget> {
       future: getAllData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return AchievementShimmer();
         } else if (snapshot.hasError) {
           return Center(child: Text('Error; Top: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {

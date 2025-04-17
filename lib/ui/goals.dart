@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../data/goals.dart';
 
+import 'shimmer.dart';
+
 class GoalsWidget extends StatefulWidget {
   @override
   _GoalsWidgetState createState() => _GoalsWidgetState();
@@ -174,7 +176,7 @@ class _GoalsWidgetState extends State<GoalsWidget> {
       future: getGoalData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+           return GoalsShimmer();
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {

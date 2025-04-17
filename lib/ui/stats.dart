@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-
+import 'package:intl/intl.dart'; 
 import '../data/usage.dart';
+
+import 'shimmer.dart';
 
 class StatsBarData {
    final double x;
@@ -118,8 +120,13 @@ class _StatsWidgetState extends State<StatsWidget> {
                ],
             ),
         ),
+        statsTitleWidget("Weekly Usage"),
         f_hoursPerDayInWeek(),
+
+        statsTitleWidget("Daily Usage"),
         f_usageDuringHoursOfTheDayInMinutes(),
+
+        statsTitleWidget("AVG App saves"),
         f_appUsagePieCharts(),
       ],
      ),
@@ -131,7 +138,7 @@ class _StatsWidgetState extends State<StatsWidget> {
          future: usageDataToBarChatGroupData(),
          builder: (context, snapshot) {
            if (snapshot.connectionState == ConnectionState.waiting) {
-             return Center(child: CircularProgressIndicator());
+              return StatsShimmer();
            } else if (snapshot.hasError) {
              return Center(child: Text('Error: ${snapshot.error}'));
            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -141,7 +148,9 @@ class _StatsWidgetState extends State<StatsWidget> {
           final  usageDataToBarChatGroupData = snapshot.data!;
 
 
-      return Container(
+      return Column( children: [
+          todayWidget(),
+          Container(
           height: 200,
           padding: EdgeInsets.all(20),
           margin: EdgeInsets.all(20),
@@ -149,8 +158,9 @@ class _StatsWidgetState extends State<StatsWidget> {
               color: Theme.of(context).colorScheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(12),
           ),
-          child: BarChart(
-           BarChartData(
+          child: 
+           BarChart(
+            BarChartData(
               barTouchData: barTouchData,
               titlesData: titlesData,
               borderData: FlBorderData(show: false),
@@ -159,7 +169,10 @@ class _StatsWidgetState extends State<StatsWidget> {
               alignment: BarChartAlignment.spaceAround,
               maxY: maxHours,
               ),
-           ),
+            
+           ),   
+         ),
+         ]
       );
      }
    );
@@ -200,7 +213,7 @@ class _StatsWidgetState extends State<StatsWidget> {
               titleStyle: TextStyle(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                color: Theme.of(context).colorScheme.surfaceDim,
                 shadows: shadows,
               ),
             ));
@@ -258,7 +271,7 @@ class _StatsWidgetState extends State<StatsWidget> {
       future: usageDataToFlSpots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return StatsShimmer();
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -342,6 +355,48 @@ class _StatsWidgetState extends State<StatsWidget> {
    );
  }
 
+  Widget todayWidget() {
+    final now = DateTime.now();
+    final day = DateFormat('d').format(now);
+    final month = DateFormat('MMMM').format(now);
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+         margin: EdgeInsets.only(left: 40, top: 20),
+         padding: EdgeInsets.symmetric(horizontal:3),
+         decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(10),
+         ),
+         child: RichText(
+         text: TextSpan(
+           style: DefaultTextStyle.of(context).style, // Inherit default text style
+           children: <TextSpan>[
+             TextSpan(
+               text: '$day $month ',
+               style: TextStyle(fontWeight: FontWeight.bold),
+             ),
+             TextSpan(text: 'Today'),
+           ],
+         ),
+       ),
+      ),
+     );
+  }
+
+ Widget statsTitleWidget(String text) => Container(
+        padding: EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryFixed,
+          borderRadius: BorderRadius.circular(50.0),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+        ),
+    );
 
   Color get gridAxisLineColor => Theme.of(context).colorScheme.outlineVariant;
   Color get barToolTipTextColor => Theme.of(context).colorScheme.primaryFixedDim;
@@ -465,7 +520,9 @@ class _StatsWidgetState extends State<StatsWidget> {
     ),
     rightTitles: AxisTitles(
       sideTitles: SideTitles(
-        showTitles: false,
+        showTitles: true,
+        reservedSize: 30,
+        getTitlesWidget: rightTitlesWidget,
       ),
     ),
   );
@@ -591,11 +648,38 @@ Widget bottomTitleWidgets(double value, TitleMeta meta) {
       default:
         return Container();
     }
-
     return Text(text, style: style, textAlign: TextAlign.left);
   }
-}
 
+ Widget rightTitlesWidget(double value, TitleMeta meta) {
+    TextStyle style = TextStyle(
+      fontWeight: FontWeight.bold,
+      color: Theme.of(context).colorScheme.primary,
+      fontSize: 8,
+    );
+
+    Widget text;
+    switch (value.toInt()) {
+      case 0:
+        text = Text('0 h', style: style);
+        break;
+      case 10:
+        text = Text('10 h', style: style);
+        break;
+      case 20:
+        text = Text('20 h', style: style);
+        break;
+      default:
+        text = Text('', style: style);
+        break;
+    }
+
+    return SideTitleWidget(
+      meta: meta,
+      child: text,
+    );
+  }
+}
 class Indicator extends StatelessWidget {
   const Indicator({
     super.key,
